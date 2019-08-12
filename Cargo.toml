@@ -1,0 +1,8 @@
+[package]
+name = "multiexec"
+version = "0.1.0"
+authors = ["Jonas Natten <jonas@natten.it>"]
+edition = "2018"
+
+[dependencies]
+clap = "2"
