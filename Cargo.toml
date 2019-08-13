@@ -1,5 +1,5 @@
 [package]
-name = "multiexec"
+name = "mrt"
 version = "0.1.0"
 authors = ["Jonas Natten <jonas@natten.it>"]
 edition = "2018"

@@ -1,6 +1,6 @@
 use super::configmodels;
 
-pub fn load_config(path: &'static str) -> configmodels::ConfigFile {
+pub fn load_config() -> configmodels::ConfigFile {
     let tag1 = configmodels::Tag {
         paths: vec![String::from("Jonas"), String::from("Kari")]
     };
