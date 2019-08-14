@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate serde_derive;
+
 mod config;
 
 const APP_NAME: &str = "Multi Repo Tool";
@@ -9,7 +12,12 @@ fn main() {
         .get_matches();
 
 
-    config::loader::load_config();
+    let config = config::loader::load_config("config.json");
+
+    match config {
+        Ok(_) => println!("OK"),
+        _ => println!("NO")
+    }
 
 
 }

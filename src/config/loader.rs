@@ -1,16 +1,20 @@
-use super::configmodels;
+use super::configmodels::ConfigFile;
 
-pub fn load_config() -> configmodels::ConfigFile {
-    let tag1 = configmodels::Tag {
-        paths: vec![String::from("Jonas"), String::from("Kari")]
-    };
+use std::fs::File;
+use std::io::prelude::*;
+use std::io;
 
-    let tags: Vec<configmodels::Tag> = vec![tag1];
+pub fn load_config(path: &str) -> Result<ConfigFile, io::Error> {
+    let config_string = read_file_to_string(path)?;
+    let data: ConfigFile = serde_json::from_str(&config_string)?;
+    Ok(data)
+}
 
-    let config_file = configmodels::ConfigFile {
-        version: String::from("apekatt"),
-        tags: tags,
-    };
 
-    config_file
+fn read_file_to_string(path: &str) -> Result<String, io::Error> {
+    let mut file = File::open(path)?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+
+    Ok(contents)
 }
