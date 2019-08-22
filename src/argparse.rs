@@ -11,32 +11,20 @@ pub struct ParsedArgs {
 fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
     let tag_prefix = "+";
 
-    // Only collect tags if they appear before other arguments
-    let mut empty = ParsedArgs {
+    let empty = ParsedArgs {
         tags: Vec::new(),
         before_tags: Vec::new(),
         after_tags: Vec::new(),
     };
 
-
-    let mut has_seen_a_tag = false;
-    let mut last_tag_seen = false;
-
-    let it = args[1..].into_iter();
-
-    for arg in it {
-        if arg.starts_with(tag_prefix) && !last_tag_seen {
-            has_seen_a_tag = true;
-            empty.tags.push(arg.clone());
-        } else if has_seen_a_tag {
-            last_tag_seen = true;
-            empty.after_tags.push(arg.clone());
-        } else {
-            empty.before_tags.push(arg.clone());
-        }
-    }
-
-    empty
+    args[1..].into_iter().fold(empty, |mut acc, arg| {
+        match arg {
+            a if arg.starts_with(tag_prefix) && acc.after_tags.is_empty() => acc.tags.push(a.clone()),
+            a if !acc.tags.is_empty() => acc.after_tags.push(a.clone()),
+            a => acc.before_tags.push(a.clone()),
+        };
+        acc
+    })
 }
 
 /// Returns tuple with results.
