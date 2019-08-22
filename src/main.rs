@@ -1,6 +1,7 @@
 mod config;
+mod argparse;
 
-const APP_NAME: &str = "Multi Repo Tool";
+// const APP_NAME: &str = "Multi Repo Tool";
 const CONFIG_ENV_NAME: &str = "MRT_CONFIG_PATH";
 const APP_VERSION: &str = "0.0.1";
 
@@ -9,7 +10,22 @@ use config::configmodels::ConfigFile;
 use std::path::Path;
 
 fn do_stuff(_config: ConfigFile) {
-    println!("YAY");
+    let (tags, remaining_args) = argparse::parse_arguments();
+    if tags.is_empty() {
+        let cmd_to_self = remaining_args.get(0);
+
+
+    } else {
+
+    }
+
+
+
+
+
+    // TODO: Store tagged paths
+    // TODO: Call execute function
+    // TODO: Parallelization
 }
 
 fn get_config_path() -> Option<String> {
@@ -32,10 +48,13 @@ fn get_config_path() -> Option<String> {
     config_path
 }
 
+
 fn main() {
+    /*
     clap::App::new(APP_NAME)
         .version(APP_VERSION)
         .get_matches();
+    */
 
     let config_path = get_config_path().unwrap_or(String::from(".mrtconfig.json"));
     let config_to_use = match config::loader::load_config(&config_path) {
