@@ -10,9 +10,9 @@ use config::configmodels::ConfigFile;
 use std::path::Path;
 
 fn do_stuff(_config: ConfigFile) {
-    let (tags, remaining_args) = argparse::parse_arguments();
-    if tags.is_empty() {
-        let cmd_to_self = remaining_args.get(0);
+    let parsed_arguments = argparse::parse_arguments();
+    println!("{:?}", parsed_arguments);
+    if parsed_arguments.tags.is_empty() {
 
 
     } else {

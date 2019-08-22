@@ -1,30 +1,42 @@
-
-
+#[derive(Debug)]
 pub struct ParsedArgs {
-    tags: Vec<String>,
-    before_tags: Vec<String>,
-    after_tags: Vec<String>,
+    pub tags: Vec<String>,
+    pub before_tags: Vec<String>,
+    pub after_tags: Vec<String>,
 }
 
 /// Takes in full list of arguments and returns tuple where
 /// first element is tags found at start of arguments and
 /// second element is the remaining arguments.
-fn find_tags_in_args(args: &Vec<String>) -> (Vec<String>, Vec<String>) {
+fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
     let tag_prefix = "+";
-    let iter = args[1..].into_iter();
 
     // Only collect tags if they appear before other arguments
-    let (_, tags, remaining_args) = iter.fold((true, Vec::new(), Vec::new()), |(keep_collecting, mut tags, mut remaining_args), arg| {
-        if keep_collecting && arg.starts_with(tag_prefix) {
-            tags.push(arg.clone());
-            (true, tags, remaining_args)
+    let mut empty = ParsedArgs {
+        tags: Vec::new(),
+        before_tags: Vec::new(),
+        after_tags: Vec::new(),
+    };
+
+
+    let mut has_seen_a_tag = false;
+    let mut last_tag_seen = false;
+
+    let it = args[1..].into_iter();
+
+    for arg in it {
+        if arg.starts_with(tag_prefix) && !last_tag_seen {
+            has_seen_a_tag = true;
+            empty.tags.push(arg.clone());
+        } else if has_seen_a_tag {
+            last_tag_seen = true;
+            empty.after_tags.push(arg.clone());
         } else {
-            // Found something other than a tag, stop collecting them.
-            remaining_args.push(arg.clone());
-            (false, tags, remaining_args)
+            empty.before_tags.push(arg.clone());
         }
-    });
-    (tags, remaining_args)
+    }
+
+    empty
 }
 
 /// Returns tuple with results.
