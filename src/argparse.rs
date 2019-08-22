@@ -5,21 +5,21 @@ pub struct ParsedArgs {
     pub after_tags: Vec<String>,
 }
 
+pub(crate) const TAG_PREFIX: &str = "+";
+
 /// Takes in full list of arguments and returns tuple where
 /// first element is tags found at start of arguments and
 /// second element is the remaining arguments.
 fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
-    let tag_prefix = "+";
-
     let empty = ParsedArgs {
         tags: Vec::new(),
         before_tags: Vec::new(),
         after_tags: Vec::new(),
     };
 
-    args[1..].into_iter().fold(empty, |mut acc, arg| {
+    args.into_iter().fold(empty, |mut acc, arg| {
         match arg {
-            a if arg.starts_with(tag_prefix) && acc.after_tags.is_empty() => acc.tags.push(a.clone()),
+            a if arg.starts_with(TAG_PREFIX) && acc.after_tags.is_empty() => acc.tags.push(a.clone()),
             a if !acc.tags.is_empty() => acc.after_tags.push(a.clone()),
             a => acc.before_tags.push(a.clone()),
         };
