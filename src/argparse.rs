@@ -1,3 +1,10 @@
+use clap::{ArgMatches, Values};
+use super::config;
+use super::config::configmodels::*;
+use std::env;
+use std::io::Result;
+
+
 #[derive(Debug)]
 pub struct ParsedArgs {
     pub tags: Vec<String>,
@@ -5,7 +12,11 @@ pub struct ParsedArgs {
     pub after_tags: Vec<String>,
 }
 
-pub(crate) const TAG_PREFIX: &str = "+";
+pub const TAG_PREFIX: &str = "+";
+pub const ADD_TAG_ARG: &str = "add-tag";
+pub const DEL_TAG_ARG: &str = "del-tag";
+pub const DELETE_CONFIG: &str = "delete-config";
+
 
 /// Takes in full list of arguments and returns tuple where
 /// first element is tags found at start of arguments and
@@ -34,4 +45,65 @@ pub fn parse_arguments() -> ParsedArgs {
     let args = std::env::args();
     let args_vec = args.collect();
     find_tags_in_args(&args_vec)
+}
+
+
+pub fn handle_args_to_self(args: ArgMatches, config: ConfigFile) -> Result<ConfigFile> {
+    match (
+        args.values_of(ADD_TAG_ARG),
+        args.values_of(DEL_TAG_ARG),
+        args.is_present(DELETE_CONFIG)
+    ) {
+        // ADD TAG
+        (
+            Some(tags),
+            None,
+            false
+        ) => { add_tag_to_current_dir(tags, config) }
+        // DEL TAG
+        (
+            None,
+            Some(tags),
+            false
+        ) => { remove_tag_from_current_dir(tags, config) }
+        // DEL CONFIG
+        (
+            None,
+            None,
+            true
+        ) => {
+            Ok(config) // TODO:
+        }
+
+        _ => Ok(config),
+    }
+}
+
+
+fn add_tag_to_current_dir(tags: Values, mut config: ConfigFile) -> Result<ConfigFile> {
+    for tag in tags {
+        let current_path = env::current_dir()?;
+        let cp = String::from(current_path.to_str().unwrap_or(""));
+
+        let inserted_tag = config.tags.entry(tag.to_string())
+            .or_insert(Tag { paths: vec![] });
+        inserted_tag.paths.push(cp);
+        inserted_tag.paths.sort();
+        inserted_tag.paths.dedup();
+    }
+    config::loader::save_config(config)
+}
+
+fn remove_tag_from_current_dir(tags: Values, mut config: ConfigFile) -> Result<ConfigFile> {
+    for tag in tags {
+        let current_path = env::current_dir()?;
+        let cp = String::from(current_path.to_str().unwrap_or(""));
+        let tag_to_remove_path_from = config.tags.get_mut(tag);
+
+        match tag_to_remove_path_from {
+            Some(tag) => tag.paths.retain(|path| *path != cp),
+            _ => println!("Didn't exist as tag /shrug")
+        }
+    }
+    config::loader::save_config(config)
 }

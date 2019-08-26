@@ -6,42 +6,38 @@ const APP_VERSION: &str = "0.0.1";
 
 use config::configmodels::ConfigFile;
 use argparse::TAG_PREFIX;
+use argparse::ADD_TAG_ARG;
 use config::loader::get_config_path;
 use std::io::Result;
-use std::env;
-use crate::config::configmodels::Tag;
+use std::process::exit;
+use crate::argparse::DEL_TAG_ARG;
 
-fn do_stuff(mut config: ConfigFile) -> Result<ConfigFile> {
+fn start_with_config(mut config: ConfigFile) -> Result<ConfigFile> {
     let parsed_arguments = argparse::parse_arguments();
 
     let args = clap::App::new(APP_NAME)
         .version(APP_VERSION)
         .arg(
-            clap::Arg::with_name("add_tag")
+            clap::Arg::with_name(ADD_TAG_ARG)
                 .short("a")
-                .long("add_tag")
+                .long(ADD_TAG_ARG)
                 .value_name("TAG_NAME")
                 .multiple(true)
                 .help(format!("Adds the current directory with specified {}tag", TAG_PREFIX).as_ref())
         )
+        .arg(
+            clap::Arg::with_name(DEL_TAG_ARG)
+                .short("d")
+                .long(DEL_TAG_ARG)
+                .value_name("TAG_NAME")
+                .multiple(true)
+                .help(format!("Deletes the current directory with specified {}tag", TAG_PREFIX).as_ref())
+        )
         .get_matches_from(parsed_arguments.before_tags);
 
-    match args.values_of("add_tag") {
-        Some(tags) => {
-            for tag in tags {
-                let current_path = env::current_dir()?;
-                let cp = String::from(current_path.to_str().unwrap_or(""));
 
-                let inserted_tag = config.tags.entry(tag.to_string())
-                    .or_insert(Tag { paths: vec![] });
-                inserted_tag.paths.push(cp);
-                inserted_tag.paths.sort();
-                inserted_tag.paths.dedup();
-            }
-            config::loader::save_config(config)
-        }
-        _ => Ok(config),
-    }
+    argparse::handle_args_to_self(args, config)
+
 
     // TODO: Call execute function
     // TODO: Parallelization
@@ -61,5 +57,10 @@ fn main() {
         }
     };
 
-    do_stuff(config_to_use);
+    let result = start_with_config(config_to_use);
+    if result.is_ok() {
+        exit(0)
+    } else {
+        exit(1)
+    }
 }
