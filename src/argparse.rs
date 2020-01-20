@@ -74,7 +74,7 @@ pub fn handle_args_to_self(args: &ArgMatches, config: ConfigFile) -> std::result
             }
             Ok(conf)
         }
-        Err(e) => Err(super::mrt_errors::new("Something wrong"))
+        Err(_) => Err(super::mrt_errors::new("Something wrong")) // TODO: Use error from match
     }
 }
 
