@@ -1,5 +1,7 @@
 mod config;
 mod argparse;
+mod execute;
+mod mrt_errors;
 
 const APP_NAME: &str = "Multi Repo Tool";
 const APP_VERSION: &str = "0.0.1";
@@ -9,11 +11,11 @@ use argparse::TAG_PREFIX;
 use argparse::ADD_TAG_ARG;
 use argparse::LIST_TAGS_ARG;
 use config::loader::get_config_path;
-use std::io::Result;
+use std::result::Result;
 use std::process::exit;
 use crate::argparse::DEL_TAG_ARG;
 
-fn start_with_config(config: ConfigFile) -> Result<ConfigFile> {
+fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
     let parsed_arguments = argparse::parse_arguments();
 
     let args = clap::App::new(APP_NAME)
@@ -41,14 +43,12 @@ fn start_with_config(config: ConfigFile) -> Result<ConfigFile> {
                 .multiple(false)
                 .help(format!("List all specified {}tag's and paths that are tagged...", TAG_PREFIX).as_ref())
         )
-        .get_matches_from(parsed_arguments.before_tags);
+        .get_matches_from(&parsed_arguments.before_tags);
 
 
-    argparse::handle_args_to_self(args, config)
-
-
-    // TODO: Call execute function
-    // TODO: Parallelization
+    argparse::handle_args_to_self(&args, config).and_then(|c| {
+        execute::exec(parsed_arguments, c)
+    })
 }
 
 

@@ -16,7 +16,6 @@ pub const TAG_PREFIX: &str = "+";
 pub const ADD_TAG_ARG: &str = "add-tag";
 pub const DEL_TAG_ARG: &str = "del-tag";
 pub const LIST_TAGS_ARG: &str = "list-tags";
-pub const DELETE_CONFIG: &str = "delete-config";
 
 
 /// Takes in full list of arguments and returns tuple where
@@ -49,7 +48,7 @@ pub fn parse_arguments() -> ParsedArgs {
 }
 
 
-pub fn handle_args_to_self(args: ArgMatches, config: ConfigFile) -> Result<ConfigFile> {
+pub fn handle_args_to_self(args: &ArgMatches, config: ConfigFile) -> std::result::Result<ConfigFile, super::mrt_errors::MrtError> {
     let config_with_added = match args.values_of(ADD_TAG_ARG) {
         Some(tags) => add_tag_to_current_dir(tags, config),
         None => Ok(config),
@@ -75,7 +74,7 @@ pub fn handle_args_to_self(args: ArgMatches, config: ConfigFile) -> Result<Confi
             }
             Ok(conf)
         }
-        Err(e) => Err(e)
+        Err(e) => Err(super::mrt_errors::new("Something wrong"))
     }
 }
 
