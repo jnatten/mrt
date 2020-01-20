@@ -17,11 +17,8 @@ pub fn exec(parsed_args: ParsedArgs, config: ConfigFile) -> Result<i8, MrtError>
             let mut cmd = Command::new(prog);
             cmd.args(args);
 
-
-
             let new_list_copy = parsed_args.tags.clone();
-
-            let all_paths: Vec<String> = new_list_copy.iter().flat_map(|t| {
+            let mut all_paths: Vec<String> = new_list_copy.iter().flat_map(|t| {
                 let tag_without_prefix: &str = t.as_str()[1..].as_ref(); // TODO: slice this in a better way, this may panic!!!
                 let x = match config.tags.get(tag_without_prefix) {
                     Some(tag) => { tag.paths.clone() }
@@ -32,6 +29,10 @@ pub fn exec(parsed_args: ParsedArgs, config: ConfigFile) -> Result<i8, MrtError>
                 };
                 x
             }).collect();
+
+            all_paths.sort()
+            all_paths.dedup();
+
 
             match cmd.output() {
                 Ok(output) => {
