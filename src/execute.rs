@@ -39,26 +39,38 @@ pub fn exec(parsed_args: ParsedArgs, config: ConfigFile) -> Result<i8, MrtError>
             let all_paths = get_all_paths(parsed_args.tags, config);
 
             for path in all_paths {
-                cmd.current_dir(&path);
-                match cmd.output() {
-                    Ok(output) => {
-                        let output_string = std::str::from_utf8(&output.stdout);
-                        match output_string {
-                            Ok(out) => {
-                                let headline = format!("in '{}':", path.as_str());
-                                println!("{}\n\n{}", headline.bright_black(), out)
-                            },
-                            _ => println!("Couldn't convert output to string..."),
-                        }
-
-                        // Ok(0);
-                    }
-                    Err(_) => {
-                        // Err(mrt_errors::new("Execution failed..."));
-                    } // TODO: Better msg
-                }
+                let result = exec_at_path(&mut cmd, &path);
             }
             Ok(0) // TODO: Somehow handle errors, maybe map over rather than for loop and print all
         }
+    }
+}
+
+fn exec_at_path(cmd: &mut Command, path: &String) -> Result<(i32, String), MrtError> {
+    cmd.current_dir(&path);
+    match cmd.output() {
+        Ok(output) => {
+            let output_string = std::str::from_utf8(&output.stdout);
+            match output_string {
+                Ok(out) => {
+                    let exit_code: i32 = match output.status.code() {
+                        Some(int) => int,
+                        _ => -255
+                    };
+                    let headline = format!("in {}", path.as_str());
+                    println!("{}\n\n{}", headline.bright_black(), out);
+                    Ok((exit_code, String::from(out)))
+                }
+                _ => {
+                    println!("Couldn't convert output to string...");
+                    Err(mrt_errors::new("Couldn't convert output to string..."))
+                }
+            }
+        }
+        Err(e) => {
+            let msg = format!("Something went wrong when executing command at {}:", path);
+            println!("{}\n\n{}\n", msg.red(), e);
+            Err(mrt_errors::new("Execution failed..."))
+        } // TODO: Better msg
     }
 }

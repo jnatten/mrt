@@ -10,6 +10,7 @@ use config::configmodels::ConfigFile;
 use argparse::TAG_PREFIX;
 use argparse::ADD_TAG_ARG;
 use argparse::LIST_TAGS_ARG;
+use argparse::PARALLEL_TAG;
 use config::loader::get_config_path;
 use std::result::Result;
 use std::process::exit;
@@ -42,6 +43,13 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
                 .long(LIST_TAGS_ARG)
                 .multiple(false)
                 .help(format!("List all specified {}tag's and paths that are tagged...", TAG_PREFIX).as_ref())
+        )
+        .arg(
+            clap::Arg::with_name(PARALLEL_TAG)
+                .short("p")
+                .long(PARALLEL_TAG)
+                .multiple(false)
+                .help("Execute at each tagged path in parallel\nThis stores output until all executions are finished and then prints them in sequence.")
         )
         .get_matches_from(&parsed_arguments.before_tags);
 

@@ -15,6 +15,7 @@ pub struct ParsedArgs {
 pub const TAG_PREFIX: &str = "+";
 pub const ADD_TAG_ARG: &str = "add-tag";
 pub const DEL_TAG_ARG: &str = "del-tag";
+pub const PARALLEL_TAG: &str = "parallel";
 pub const LIST_TAGS_ARG: &str = "list-tags";
 
 
