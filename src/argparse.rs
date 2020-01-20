@@ -15,6 +15,7 @@ pub struct ParsedArgs {
 pub const TAG_PREFIX: &str = "+";
 pub const ADD_TAG_ARG: &str = "add-tag";
 pub const DEL_TAG_ARG: &str = "del-tag";
+pub const LIST_TAGS_ARG: &str = "list-tags";
 pub const DELETE_CONFIG: &str = "delete-config";
 
 
@@ -49,36 +50,34 @@ pub fn parse_arguments() -> ParsedArgs {
 
 
 pub fn handle_args_to_self(args: ArgMatches, config: ConfigFile) -> Result<ConfigFile> {
-    match (
-        args.values_of(ADD_TAG_ARG),
-        args.values_of(DEL_TAG_ARG),
-        args.is_present(DELETE_CONFIG)
-    ) {
-        // ADD TAG
-        (
-            Some(tags),
-            None,
-            false
-        ) => { add_tag_to_current_dir(tags, config) }
-        // DEL TAG
-        (
-            None,
-            Some(tags),
-            false
-        ) => { remove_tag_from_current_dir(tags, config) }
-        // DEL CONFIG
-        (
-            None,
-            None,
-            true
-        ) => {
-            Ok(config) // TODO:
-        }
+    let config_with_added = match args.values_of(ADD_TAG_ARG) {
+        Some(tags) => add_tag_to_current_dir(tags, config),
+        None => Ok(config),
+    };
 
-        _ => Ok(config),
+    let config_with_removed = config_with_added.and_then(|conf|
+        match args.values_of(DEL_TAG_ARG) {
+            Some(tags) => remove_tag_from_current_dir(tags, conf),
+            None => Ok(conf)
+        }
+    );
+
+    match config_with_removed {
+        Ok(conf) => {
+            if args.is_present(LIST_TAGS_ARG) {
+                println!("Config Version: {}", conf.version);
+                for (tag_name, tag) in &conf.tags {
+                    println!("{}:", tag_name);
+                    for path in &tag.paths {
+                        println!("\t{}", path);
+                    }
+                }
+            }
+            Ok(conf)
+        }
+        Err(e) => Err(e)
     }
 }
-
 
 fn add_tag_to_current_dir(tags: Values, mut config: ConfigFile) -> Result<ConfigFile> {
     for tag in tags {
