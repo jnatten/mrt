@@ -1,20 +1,20 @@
-mod config;
 mod argparse;
+mod config;
 mod execute;
 mod mrt_errors;
 
 const APP_NAME: &str = "Multi Repo Tool";
 const APP_VERSION: &str = "0.0.1";
 
-use config::configmodels::ConfigFile;
-use argparse::TAG_PREFIX;
+use crate::argparse::DEL_TAG_ARG;
 use argparse::ADD_TAG_ARG;
 use argparse::LIST_TAGS_ARG;
 use argparse::PARALLEL_TAG;
+use argparse::TAG_PREFIX;
+use config::configmodels::ConfigFile;
 use config::loader::get_config_path;
-use std::result::Result;
 use std::process::exit;
-use crate::argparse::DEL_TAG_ARG;
+use std::result::Result;
 
 fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
     let parsed_arguments = argparse::parse_arguments();
@@ -53,12 +53,9 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
         )
         .get_matches_from(&parsed_arguments.before_tags);
 
-
-    argparse::handle_args_to_self(&args, config).and_then(|c| {
-        execute::exec(parsed_arguments, c)
-    })
+    argparse::handle_args_to_self(&args, config)
+        .and_then(|c| execute::exec(&args, parsed_arguments, c))
 }
-
 
 fn main() {
     let config_path = get_config_path().unwrap_or(String::from(".mrtconfig.json"));
@@ -70,7 +67,7 @@ fn main() {
                 println!("Something went wrong, exiting");
                 ::std::process::exit(1)
             }
-        }
+        },
     };
 
     let result = start_with_config(config_to_use);

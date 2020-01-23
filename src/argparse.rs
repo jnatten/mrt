@@ -1,9 +1,8 @@
-use clap::{ArgMatches, Values};
 use super::config;
 use super::config::configmodels::*;
+use clap::{ArgMatches, Values};
 use std::env;
 use std::io::Result;
-
 
 #[derive(Debug)]
 pub struct ParsedArgs {
@@ -18,7 +17,6 @@ pub const DEL_TAG_ARG: &str = "del-tag";
 pub const PARALLEL_TAG: &str = "parallel";
 pub const LIST_TAGS_ARG: &str = "list-tags";
 
-
 /// Takes in full list of arguments and returns tuple where
 /// first element is tags found at start of arguments and
 /// second element is the remaining arguments.
@@ -31,7 +29,9 @@ fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
 
     args.into_iter().fold(empty, |mut acc, arg| {
         match arg {
-            a if arg.starts_with(TAG_PREFIX) && acc.after_tags.is_empty() => acc.tags.push(a.clone()),
+            a if arg.starts_with(TAG_PREFIX) && acc.after_tags.is_empty() => {
+                acc.tags.push(a.clone())
+            }
             a if !acc.tags.is_empty() => acc.after_tags.push(a.clone()),
             a => acc.before_tags.push(a.clone()),
         };
@@ -48,19 +48,20 @@ pub fn parse_arguments() -> ParsedArgs {
     find_tags_in_args(&args_vec)
 }
 
-
-pub fn handle_args_to_self(args: &ArgMatches, config: ConfigFile) -> std::result::Result<ConfigFile, super::mrt_errors::MrtError> {
+pub fn handle_args_to_self(
+    args: &ArgMatches,
+    config: ConfigFile,
+) -> std::result::Result<ConfigFile, super::mrt_errors::MrtError> {
     let config_with_added = match args.values_of(ADD_TAG_ARG) {
         Some(tags) => add_tag_to_current_dir(tags, config),
         None => Ok(config),
     };
 
-    let config_with_removed = config_with_added.and_then(|conf|
-        match args.values_of(DEL_TAG_ARG) {
+    let config_with_removed =
+        config_with_added.and_then(|conf| match args.values_of(DEL_TAG_ARG) {
             Some(tags) => remove_tag_from_current_dir(tags, conf),
-            None => Ok(conf)
-        }
-    );
+            None => Ok(conf),
+        });
 
     match config_with_removed {
         Ok(conf) => {
@@ -75,7 +76,7 @@ pub fn handle_args_to_self(args: &ArgMatches, config: ConfigFile) -> std::result
             }
             Ok(conf)
         }
-        Err(_) => Err(super::mrt_errors::new("Something wrong")) // TODO: Use error from match
+        Err(_) => Err(super::mrt_errors::new("Something wrong")), // TODO: Use error from match
     }
 }
 
@@ -84,7 +85,9 @@ fn add_tag_to_current_dir(tags: Values, mut config: ConfigFile) -> Result<Config
         let current_path = env::current_dir()?;
         let cp = String::from(current_path.to_str().unwrap_or(""));
 
-        let inserted_tag = config.tags.entry(tag.to_string())
+        let inserted_tag = config
+            .tags
+            .entry(tag.to_string())
             .or_insert(Tag { paths: vec![] });
         inserted_tag.paths.push(cp);
         inserted_tag.paths.sort();
@@ -101,7 +104,7 @@ fn remove_tag_from_current_dir(tags: Values, mut config: ConfigFile) -> Result<C
 
         match tag_to_remove_path_from {
             Some(tag) => tag.paths.retain(|path| *path != cp),
-            _ => println!("Didn't exist as tag /shrug")
+            _ => println!("Didn't exist as tag /shrug"),
         }
     }
     config::loader::save_config(config)

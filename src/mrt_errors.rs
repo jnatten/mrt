@@ -7,7 +7,9 @@ pub struct MrtError {
 }
 
 pub fn new(msg: &str) -> MrtError {
-    MrtError { msg: msg.to_string() }
+    MrtError {
+        msg: msg.to_string(),
+    }
 }
 
 impl fmt::Display for MrtError {

@@ -1,11 +1,11 @@
 use super::configmodels::*;
 
+use crate::APP_VERSION;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::Result;
 use std::path::Path;
-use crate::APP_VERSION;
-use std::collections::HashMap;
 
 const CONFIG_ENV_NAME: &str = "MRT_CONFIG_PATH";
 
