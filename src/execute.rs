@@ -1,4 +1,5 @@
 use super::argparse::ParsedArgs;
+use super::argparse::PARALLEL_TAG;
 use super::config::configmodels::ConfigFile;
 use super::mrt_errors;
 use super::mrt_errors::MrtError;
@@ -7,7 +8,6 @@ use colored::Colorize;
 use rayon::prelude::*;
 use std::process::Command;
 use std::result::Result;
-use super::argparse::PARALLEL_TAG;
 
 struct ExecutionOutput {
     exit_code: i32,
@@ -21,7 +21,7 @@ fn get_all_paths(tags: Vec<String>, config: ConfigFile) -> Vec<String> {
         .flat_map(|t| {
             let tag_without_prefix: &str = t.as_str()[1..].as_ref(); // TODO: slice this in a better way, this may panic!!!
             match config.tags.get(tag_without_prefix) {
-                Some(tag) => { tag.paths.clone() }
+                Some(tag) => tag.paths.clone(),
                 None => {
                     println!("Config not found for tag '{}', skipping...", t);
                     vec![]
@@ -52,14 +52,12 @@ fn print_result(path: &String, output: ExecutionOutput) -> () {
     }
 }
 
-
 pub fn exec(
     clap_args: &ArgMatches,
     parsed_args: ParsedArgs,
     config: ConfigFile,
 ) -> Result<i8, MrtError> {
     let program = parsed_args.after_tags.first();
-
 
     match program {
         None => Err(mrt_errors::new("Nothing to execute")),
@@ -68,8 +66,11 @@ pub fn exec(
 
             let all_paths = get_all_paths(parsed_args.tags, config);
 
-            let execute_func = |path: &String | {
-                (path.to_string(), exec_at_path(path.to_string(), prog.to_string(), args))
+            let execute_func = |path: &String| {
+                (
+                    path.to_string(),
+                    exec_at_path(path.to_string(), prog.to_string(), args),
+                )
             };
 
             let execute_output: Vec<(String, Result<ExecutionOutput, MrtError>)> =
@@ -78,7 +79,6 @@ pub fn exec(
                 } else {
                     all_paths.iter().map(execute_func).collect()
                 };
-
 
             for (path, output) in execute_output {
                 match output {
