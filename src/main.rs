@@ -4,6 +4,7 @@ mod execute;
 mod mrt_errors;
 
 const APP_NAME: &str = "Multi Repo Tool";
+const APP_SHORT_NAME: &str = "mrt";
 const APP_VERSION: &str = "0.0.1";
 
 use crate::argparse::DEL_TAG_ARG;
@@ -11,16 +12,56 @@ use argparse::ADD_TAG_ARG;
 use argparse::LIST_TAGS_ARG;
 use argparse::PARALLEL_TAG;
 use argparse::TAG_PREFIX;
+use colored::Colorize;
 use config::configmodels::ConfigFile;
 use config::loader::get_config_path;
 use std::process::exit;
 use std::result::Result;
+
+fn help_text() -> String {
+    format!(
+        "EXAMPLES:
+    {}
+    {}
+
+    {}
+    {}
+
+    {}
+    {}
+
+    {}
+    {}
+
+    {}
+    {}
+
+    {}
+    {}
+    ",
+        "# Tag current directory with tag `backend`".bright_black(),
+        "$ mrt -a backend",
+        "# Remove tag `backend` from current directory".bright_black(),
+        "$ mrt -d backend",
+        "# List tagged directories".bright_black(),
+        "$ mrt -l",
+        "# Execute command in all directories tagged with `backend`".bright_black(),
+        "$ mrt +backend sed -i 's/someversion = \"1.0.0\"/someversion = \"1.2.0\"/g build.sbt",
+        "# Execute command in all directories tagged with `backend` in parallel".bright_black(),
+        "$ mrt -p +backend git pull",
+        "# Execute command in all directories tagged with `backend` and `frontend` in parallel"
+            .bright_black(),
+        "$ mrt -p +backend +frontend git pull"
+    )
+}
 
 fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
     let parsed_arguments = argparse::parse_arguments();
 
     let args = clap::App::new(APP_NAME)
         .version(APP_VERSION)
+        .usage(format!("{} [FLAGS] [OPTIONS] [+tag ..]", APP_SHORT_NAME).as_ref())
+        .after_help(help_text().as_ref())
         .arg(
             clap::Arg::with_name(ADD_TAG_ARG)
                 .short("a")

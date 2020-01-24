@@ -30,7 +30,7 @@ $ mrt -h
 Multi Repo Tool 0.0.1
 
 USAGE:
-    mrt [FLAGS] [OPTIONS]
+    mrt [FLAGS] [OPTIONS] [+tag ..]
 
 FLAGS:
     -h, --help         Prints help information
@@ -42,26 +42,26 @@ FLAGS:
 OPTIONS:
     -a, --add-tag <TAG_NAME>...    Adds the current directory with specified +tag
     -d, --del-tag <TAG_NAME>...    Deletes the current directory with specified +tag
+
+EXAMPLES:
+    # Tag current directory with tag `backend`
+    $ mrt -a backend
+
+    # Remove tag `backend` from current directory
+    $ mrt -d backend
+
+    # List tagged directories
+    $ mrt -l
+
+    # Execute command in all directories tagged with `backend`
+    $ mrt +backend sed -i 's/someversion = "1.0.0"/someversion = "1.2.0"/g build.sbt
+
+    # Execute command in all directories tagged with `backend` in parallel
+    $ mrt -p +backend git pull
+
+    # Execute command in all directories tagged with `backend` and `frontend` in parallel
+    $ mrt -p +backend +frontend git pull
 ```
-
-#### Examples
-
-Tag current directory with tag `backend`
-`$ mrt -a backend`
-
-Remove tag `backend` from current directory
-`$ mrt -d backend`
-
-List tagged directories
-`$ mrt -l`
-
-Execute command in all directories tagged with `backend`
-
-`$ mrt +backend sed -i 's/someversion = \"1.0.0\"/someversion = \"1.2.0\"/g build.sbt`
-
-Execute command in all directories tagged with `backend` in parallel
-
-`$ mrt -p +backend git pull`
 
 TODO: Remove all tags from current directory
 TODO: Remove all directories tagged with specified tag
