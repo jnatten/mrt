@@ -1,9 +1,10 @@
 # mrt - Multi Repo Tool
 
 A tool to interact with multiple repositories.
+
 (By executing the specified commands in each context)
 
-This is all very not finished and there is a risk you will encounter problems and bugs 
+This is not a finished product and there is a chance you will encounter bugs or problems. 
 
 Reports of [issues](https://github.com/jnatten/mrt/issues/new) are really appreciated, along with pull-requests and suggestions on how to improve the code (Rust is still very new to me).
 
@@ -33,11 +34,14 @@ USAGE:
     mrt [FLAGS] [OPTIONS] [+tag ..]
 
 FLAGS:
-    -h, --help         Prints help information
-    -l, --list-tags    List all specified +tag's and paths that are tagged...
-    -p, --parallel     Execute at each tagged path in parallel
-                       This stores output until all executions are finished and then prints them in sequence.
-    -V, --version      Prints version information
+    -c, --continuous-output    Will make output from commands executed in parallel with --parallel argument print to
+                               terminal before every command has been executed.
+    -h, --help                 Prints help information
+    -l, --list-tags            List all specified +tag's and paths that are tagged...
+    -p, --parallel             Execute at each tagged path in parallel
+                               This stores output until all executions are finished and then prints them in sequence,
+                               unless --continuous-output specified.
+    -V, --version              Prints version information
 
 OPTIONS:
     -a, --add-tag <TAG_NAME>...    Adds the current directory with specified +tag
@@ -61,10 +65,8 @@ EXAMPLES:
 
     # Execute command in all directories tagged with `backend` and `frontend` in parallel
     $ mrt -p +backend +frontend git pull
+ 
 ```
-
-TODO: Remove all tags from current directory
-TODO: Remove all directories tagged with specified tag
 
 ### Why?
 
