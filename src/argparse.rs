@@ -4,7 +4,7 @@ use clap::{ArgMatches, Values};
 use std::env;
 use std::io::Result;
 
-#[derive(Debug)]
+#[derive(Debug, PartialOrd, PartialEq)]
 pub struct ParsedArgs {
     pub tags: Vec<String>,
     pub before_tags: Vec<String>,
@@ -108,4 +108,46 @@ fn remove_tag_from_current_dir(tags: Values, mut config: ConfigFile) -> Result<C
         }
     }
     config::loader::save_config(config)
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    fn to_string_vec(v: Vec<&str>) -> Vec<String> {
+        v.into_iter().map(|s| s.to_owned()).collect()
+    }
+
+    #[test]
+    fn test_single_tag_is_parsed_correctly() {
+        let test_args: Vec<String> = to_string_vec(vec!["mrt", "-p", "+testtag", "ls", "-l", "-h"]);
+
+        let expected = ParsedArgs {
+            tags: to_string_vec(vec!["+testtag"]),
+            before_tags: to_string_vec(vec!["mrt", "-p"]),
+            after_tags: to_string_vec(vec!["ls", "-l", "-h"]),
+        };
+
+        let result = find_tags_in_args(&test_args);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_multiple_tags_are_parsed_correctly() {
+        let test_args: Vec<String> = to_string_vec(vec![
+            "mrt", "+testtag", "+testaru", "+testari", "+x", "ls", "-l", "-h",
+        ]);
+
+        let expected = ParsedArgs {
+            tags: to_string_vec(vec!["+testtag", "+testaru", "+testari", "+x"]),
+            before_tags: to_string_vec(vec!["mrt"]),
+            after_tags: to_string_vec(vec!["ls", "-l", "-h"]),
+        };
+
+        let result = find_tags_in_args(&test_args);
+
+        assert_eq!(result, expected);
+    }
 }
