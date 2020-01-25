@@ -75,7 +75,7 @@ pub fn exec(
                 args,
                 clap_args.is_present(PARALLEL_TAG),
                 should_print_instantly,
-            );
+            )?;
 
             if !should_print_instantly {
                 for (path, output) in execute_output {
@@ -97,7 +97,7 @@ fn exec_all(
     args: &[String],
     in_parallel: bool,
     should_print_instantly: bool,
-) -> Vec<(String, Result<ExecutionOutput, MrtError>)> {
+) -> Result<Vec<(String, Result<ExecutionOutput, MrtError>)>, MrtError> {
     let execute_func = |path: &String| {
         (
             path.to_string(),
@@ -111,9 +111,13 @@ fn exec_all(
     };
 
     if in_parallel {
-        all_paths.par_iter().map(execute_func).collect()
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(all_paths.len())
+            .build_global()?;
+
+        Ok(all_paths.par_iter().map(execute_func).collect())
     } else {
-        all_paths.iter().map(execute_func).collect()
+        Ok(all_paths.iter().map(execute_func).collect())
     }
 }
 

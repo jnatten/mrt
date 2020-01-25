@@ -32,3 +32,9 @@ impl From<std::io::Error> for MrtError {
         MrtError::new(err.description())
     }
 }
+
+impl From<rayon::ThreadPoolBuildError> for MrtError {
+    fn from(err: rayon::ThreadPoolBuildError) -> Self {
+        MrtError::new(err.description())
+    }
+}
