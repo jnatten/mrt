@@ -1,4 +1,5 @@
 use std::error;
+use std::error::Error;
 use std::fmt;
 
 #[derive(Debug, Clone)]
@@ -6,9 +7,11 @@ pub struct MrtError {
     msg: String,
 }
 
-pub fn new(msg: &str) -> MrtError {
-    MrtError {
-        msg: msg.to_string(),
+impl MrtError {
+    pub fn new(msg: &str) -> MrtError {
+        MrtError {
+            msg: msg.to_string(),
+        }
     }
 }
 
@@ -21,5 +24,11 @@ impl fmt::Display for MrtError {
 impl error::Error for MrtError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         None
+    }
+}
+
+impl From<std::io::Error> for MrtError {
+    fn from(err: std::io::Error) -> Self {
+        MrtError::new(err.description())
     }
 }

@@ -1,7 +1,6 @@
 use super::argparse::ParsedArgs;
 use super::argparse::PARALLEL_TAG;
 use super::config::configmodels::ConfigFile;
-use super::mrt_errors;
 use super::mrt_errors::MrtError;
 use crate::argparse::CONTINUOUS_OUTPUT_ARG;
 use clap::ArgMatches;
@@ -61,7 +60,7 @@ pub fn exec(
     let program = parsed_args.after_tags.first();
 
     match program {
-        None => Err(mrt_errors::new("Nothing to execute")),
+        None => Err(MrtError::new("Nothing to execute")),
         Some(prog) => {
             let args = &parsed_args.after_tags[1..];
 
@@ -112,39 +111,32 @@ fn exec_at_path(
     let mut cmd = Command::new(cmd);
     cmd.args(args);
     cmd.current_dir(&path);
-    match cmd.output() {
-        Ok(output) => {
-            let stdout_string = std::str::from_utf8(&output.stdout);
-            let stderr_string = std::str::from_utf8(&output.stderr);
-            match (stdout_string, stderr_string) {
-                (Ok(out), Ok(err)) => {
-                    let exit_code: i32 = match output.status.code() {
-                        Some(int) => int,
-                        _ => -255,
-                    };
+    let output = cmd.output()?;
 
-                    let execution = ExecutionOutput {
-                        exit_code,
-                        stdout: String::from(out),
-                        stderr: String::from(err),
-                    };
+    let stdout_string = std::str::from_utf8(&output.stdout);
+    let stderr_string = std::str::from_utf8(&output.stderr);
+    match (stdout_string, stderr_string) {
+        (Ok(out), Ok(err)) => {
+            let exit_code: i32 = match output.status.code() {
+                Some(int) => int,
+                _ => -255,
+            };
 
-                    if print {
-                        print_result(&path, &execution);
-                    }
+            let execution = ExecutionOutput {
+                exit_code,
+                stdout: String::from(out),
+                stderr: String::from(err),
+            };
 
-                    Ok(execution)
-                }
-                _ => {
-                    println!("Couldn't convert output to string...");
-                    Err(mrt_errors::new("Couldn't convert output to string..."))
-                }
+            if print {
+                print_result(&path, &execution);
             }
+
+            Ok(execution)
         }
-        Err(e) => {
-            let msg = format!("Something went wrong when executing command at {}:", path);
-            println!("{}\n\n{}\n", msg.red(), e);
-            Err(mrt_errors::new("Execution failed..."))
-        } // TODO: Better msg
+        _ => {
+            println!("Couldn't convert output to string...");
+            Err(MrtError::new("Couldn't convert output to string..."))
+        }
     }
 }

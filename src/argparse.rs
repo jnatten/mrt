@@ -1,5 +1,6 @@
 use super::config;
 use super::config::configmodels::*;
+use crate::mrt_errors::MrtError;
 use clap::{ArgMatches, Values};
 use std::env;
 use std::io::Result;
@@ -52,7 +53,7 @@ pub fn parse_arguments() -> ParsedArgs {
 pub fn handle_args_to_self(
     args: &ArgMatches,
     config: ConfigFile,
-) -> std::result::Result<ConfigFile, super::mrt_errors::MrtError> {
+) -> std::result::Result<ConfigFile, MrtError> {
     let config_with_added = match args.values_of(ADD_TAG_ARG) {
         Some(tags) => add_tag_to_current_dir(tags, config),
         None => Ok(config),
@@ -77,7 +78,7 @@ pub fn handle_args_to_self(
             }
             Ok(conf)
         }
-        Err(_) => Err(super::mrt_errors::new("Something wrong")), // TODO: Use error from match
+        Err(err) => Err(MrtError::from(err)),
     }
 }
 
