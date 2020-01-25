@@ -69,24 +69,13 @@ pub fn exec(
             let should_print_instantly = (!clap_args.is_present(PARALLEL_TAG))
                 || clap_args.is_present(CONTINUOUS_OUTPUT_ARG);
 
-            let execute_func = |path: &String| {
-                (
-                    path.to_string(),
-                    exec_at_path(
-                        path.to_string(),
-                        prog.to_string(),
-                        args,
-                        should_print_instantly,
-                    ),
-                )
-            };
-
-            let execute_output: Vec<(String, Result<ExecutionOutput, MrtError>)> =
-                if clap_args.is_present(PARALLEL_TAG) {
-                    all_paths.par_iter().map(execute_func).collect()
-                } else {
-                    all_paths.iter().map(execute_func).collect()
-                };
+            let execute_output = exec_all(
+                all_paths,
+                prog,
+                args,
+                clap_args.is_present(PARALLEL_TAG),
+                should_print_instantly,
+            );
 
             if !should_print_instantly {
                 for (path, output) in execute_output {
@@ -99,6 +88,32 @@ pub fn exec(
 
             Ok(0) // TODO: Somehow handle errors, maybe map over rather than for loop and print all
         }
+    }
+}
+
+fn exec_all(
+    all_paths: Vec<String>,
+    prog: &String,
+    args: &[String],
+    in_parallel: bool,
+    should_print_instantly: bool,
+) -> Vec<(String, Result<ExecutionOutput, MrtError>)> {
+    let execute_func = |path: &String| {
+        (
+            path.to_string(),
+            exec_at_path(
+                path.to_string(),
+                prog.to_string(),
+                args,
+                should_print_instantly,
+            ),
+        )
+    };
+
+    if in_parallel {
+        all_paths.par_iter().map(execute_func).collect()
+    } else {
+        all_paths.iter().map(execute_func).collect()
     }
 }
 
