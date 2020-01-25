@@ -93,7 +93,7 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
                 .short("c")
                 .long(CONTINUOUS_OUTPUT_ARG)
                 .multiple(false)
-                .help("Will make output from commands executed in parallel with --{} argument print to terminal before every command has been executed.")
+                .help(format!("Will make output from commands executed in parallel with --{} argument print to terminal before every command has been executed.", PARALLEL_TAG).as_ref())
         )
         .get_matches_from(&parsed_arguments.before_tags);
 
