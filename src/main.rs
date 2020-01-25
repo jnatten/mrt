@@ -7,11 +7,7 @@ const APP_NAME: &str = "Multi Repo Tool";
 const APP_SHORT_NAME: &str = "mrt";
 const APP_VERSION: &str = "0.0.1";
 
-use crate::argparse::DEL_TAG_ARG;
-use argparse::ADD_TAG_ARG;
-use argparse::LIST_TAGS_ARG;
-use argparse::PARALLEL_TAG;
-use argparse::TAG_PREFIX;
+use argparse::*;
 use colored::Colorize;
 use config::configmodels::ConfigFile;
 use config::loader::get_config_path;
@@ -90,7 +86,14 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
                 .short("p")
                 .long(PARALLEL_TAG)
                 .multiple(false)
-                .help("Execute at each tagged path in parallel\nThis stores output until all executions are finished and then prints them in sequence.")
+                .help(format!("Execute at each tagged path in parallel\nThis stores output until all executions are finished and then prints them in sequence, unless --{} specified.", CONTINUOUS_OUTPUT_ARG).as_ref())
+        )
+        .arg(
+            clap::Arg::with_name(CONTINUOUS_OUTPUT_ARG)
+                .short("c")
+                .long(CONTINUOUS_OUTPUT_ARG)
+                .multiple(false)
+                .help("Will make output from commands executed in parallel with --{} argument print to terminal before every command has been executed.")
         )
         .get_matches_from(&parsed_arguments.before_tags);
 

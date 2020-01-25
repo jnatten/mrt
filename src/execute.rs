@@ -3,6 +3,7 @@ use super::argparse::PARALLEL_TAG;
 use super::config::configmodels::ConfigFile;
 use super::mrt_errors;
 use super::mrt_errors::MrtError;
+use crate::argparse::CONTINUOUS_OUTPUT_ARG;
 use clap::ArgMatches;
 use colored::Colorize;
 use rayon::prelude::*;
@@ -35,7 +36,7 @@ fn get_all_paths(tags: Vec<String>, config: ConfigFile) -> Vec<String> {
     all_paths
 }
 
-fn print_result(path: &String, output: ExecutionOutput) -> () {
+fn print_result(path: &String, output: &ExecutionOutput) -> () {
     let headline = format!("\nin {}", path.as_str());
     if output.exit_code == 0 {
         println!("{}", headline.bright_black());
@@ -66,10 +67,18 @@ pub fn exec(
 
             let all_paths = get_all_paths(parsed_args.tags, config);
 
+            let should_print_instantly = (!clap_args.is_present(PARALLEL_TAG))
+                || clap_args.is_present(CONTINUOUS_OUTPUT_ARG);
+
             let execute_func = |path: &String| {
                 (
                     path.to_string(),
-                    exec_at_path(path.to_string(), prog.to_string(), args),
+                    exec_at_path(
+                        path.to_string(),
+                        prog.to_string(),
+                        args,
+                        should_print_instantly,
+                    ),
                 )
             };
 
@@ -80,10 +89,12 @@ pub fn exec(
                     all_paths.iter().map(execute_func).collect()
                 };
 
-            for (path, output) in execute_output {
-                match output {
-                    Ok(res) => print_result(&path, res),
-                    _ => (),
+            if !should_print_instantly {
+                for (path, output) in execute_output {
+                    match output {
+                        Ok(res) => print_result(&path, &res),
+                        _ => (),
+                    }
                 }
             }
 
@@ -92,7 +103,12 @@ pub fn exec(
     }
 }
 
-fn exec_at_path(path: String, cmd: String, args: &[String]) -> Result<ExecutionOutput, MrtError> {
+fn exec_at_path(
+    path: String,
+    cmd: String,
+    args: &[String],
+    print: bool,
+) -> Result<ExecutionOutput, MrtError> {
     let mut cmd = Command::new(cmd);
     cmd.args(args);
     cmd.current_dir(&path);
@@ -112,6 +128,10 @@ fn exec_at_path(path: String, cmd: String, args: &[String]) -> Result<ExecutionO
                         stdout: String::from(out),
                         stderr: String::from(err),
                     };
+
+                    if print {
+                        print_result(&path, &execution);
+                    }
 
                     Ok(execution)
                 }
