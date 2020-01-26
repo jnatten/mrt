@@ -1,6 +1,7 @@
 use super::config;
 use super::config::configmodels::*;
 use crate::mrt_errors::MrtError;
+use args::*;
 use clap::{ArgMatches, Values};
 use std::env;
 use std::io::Result;
@@ -12,12 +13,14 @@ pub struct ParsedArgs {
     pub after_tags: Vec<String>,
 }
 
-pub const TAG_PREFIX: &str = "+";
-pub const ADD_TAG_ARG: &str = "add-tag";
-pub const DEL_TAG_ARG: &str = "del-tag";
-pub const PARALLEL_TAG: &str = "parallel";
-pub const LIST_TAGS_ARG: &str = "list-tags";
-pub const CONTINUOUS_OUTPUT_ARG: &str = "continuous-output";
+pub mod args {
+    pub const TAG_PREFIX: &str = "+";
+    pub const ADD_TAG_ARG: &str = "add-tag";
+    pub const DEL_TAG_ARG: &str = "del-tag";
+    pub const PARALLEL_TAG: &str = "parallel";
+    pub const LIST_TAGS_ARG: &str = "list-tags";
+    pub const CONTINUOUS_OUTPUT_ARG: &str = "continuous-output";
+}
 
 /// Takes in full list of arguments and returns tuple where
 /// first element is tags found at start of arguments and

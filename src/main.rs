@@ -7,7 +7,7 @@ const APP_NAME: &str = "Multi Repo Tool";
 const APP_SHORT_NAME: &str = "mrt";
 const APP_VERSION: &str = "0.0.1";
 
-use argparse::*;
+use argparse::args::*;
 use colored::Colorize;
 use config::configmodels::ConfigFile;
 use config::loader::get_config_path;

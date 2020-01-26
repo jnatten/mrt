@@ -1,8 +1,7 @@
 use super::argparse::ParsedArgs;
-use super::argparse::PARALLEL_TAG;
 use super::config::configmodels::ConfigFile;
 use super::mrt_errors::MrtError;
-use crate::argparse::CONTINUOUS_OUTPUT_ARG;
+use crate::argparse::args::*;
 use clap::ArgMatches;
 use colored::Colorize;
 use rayon::prelude::*;
