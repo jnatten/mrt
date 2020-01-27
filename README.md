@@ -1,8 +1,6 @@
 # mrt - Multi Repo Tool
 
-A tool to interact with multiple repositories.
-
-(By executing the specified commands in each context)
+A tool to interact with multiple repositories, by executing the specified commands in each context with the specified tag (See EXAMPLES in [usage section](#usage)).
 
 This is not a finished product and there is a chance you will encounter bugs or problems. 
 
