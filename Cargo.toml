@@ -5,7 +5,7 @@ authors = ["Jonas Natten <jonas@natten.it>"]
 edition = "2018"
 
 [dependencies]
-clap = "2" # Command line argument parser
+clap = "2.33.0" # Command line argument parser
 colored = "1.9" # Terminal colors
 rayon = "1.3.0" # Parallelization
 

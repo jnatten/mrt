@@ -44,9 +44,6 @@ fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
     })
 }
 
-/// Returns tuple with results.
-/// First element is tags found at start of arguments.
-/// Second element is the remaining arguments.
 pub fn parse_arguments() -> ParsedArgs {
     let args = std::env::args();
     let args_vec = args.collect();
