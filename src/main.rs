@@ -8,12 +8,12 @@ const APP_SHORT_NAME: &str = "mrt";
 const APP_VERSION: &str = "0.0.1";
 
 use argparse::args::*;
+use clap::{AppSettings, Arg, SubCommand};
 use colored::Colorize;
 use config::configmodels::ConfigFile;
 use config::loader::get_config_path;
 use std::process::exit;
 use std::result::Result;
-use clap::Arg;
 
 fn help_text() -> String {
     format!(
@@ -54,31 +54,11 @@ fn help_text() -> String {
 
 fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
     let parsed_arguments = argparse::parse_arguments();
-    let input_args: Vec<String> = std::env::args().collect();
-
-    // Dynamically generate hidden args based on tags
-    // TODO: Move this to a separate function when you get better at rust, and probably clean up code as well
-    let mut tag_vec = vec![];
-    for tag in config.tags.keys() {
-        tag_vec.push(
-            format!("+{}", tag).to_owned()
-        );
-    }
-
-    let str_vec: Vec<&str> = tag_vec.iter().map(|t| {
-        t.as_ref()
-    }).collect();
-
-    let arg_vec: Vec<Arg> = str_vec.iter().map(|t| {
-        Arg::with_name(t)
-            .long(t)
-            .hidden(false)
-    }).collect();
-
 
     let args = clap::App::new(APP_NAME)
         .version(APP_VERSION)
-        // .usage(format!("{} [FLAGS] [OPTIONS] [+tag ..] [--] [command]", APP_SHORT_NAME).as_ref())
+        .usage(format!("{} [FLAGS] [OPTIONS] [+tag ..] [--] [command]", APP_SHORT_NAME).as_ref())
+        .setting(AppSettings::AllowExternalSubcommands)
         .after_help(help_text().as_ref())
         .arg(
             Arg::with_name(ADD_TAG_ARG)
@@ -117,18 +97,16 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
                 .multiple(false)
                 .help(format!("Will make output from commands executed in parallel with --{} argument print to terminal before every command has been executed.", PARALLEL_TAG).as_ref())
         )
-        .args(&arg_vec)
-        .get_matches_from(&input_args);
+        .subcommand(
+            // TODO: Move strings to cooler place
+            SubCommand::with_name("status")
+        )
+        .get_matches_from(&parsed_arguments.before_tags);
 
-    println!("Test {:#?}", input_args);
-    Ok(0)
+    println!("Test {:#?}", parsed_arguments);
 
-    /*
     argparse::handle_args_to_self(&args, config)
-        .and_then(|c| {
-            execute::exec(&args, parsed_arguments, c)
-        })
-    */
+        .and_then(|c| execute::exec(&args, parsed_arguments, c))
 }
 
 fn main() {
