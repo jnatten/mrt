@@ -8,7 +8,7 @@ const APP_SHORT_NAME: &str = "mrt";
 const APP_VERSION: &str = "0.0.1";
 
 use argparse::args::*;
-use clap::{AppSettings, Arg, SubCommand};
+use clap::{Arg, SubCommand};
 use colored::Colorize;
 use config::configmodels::ConfigFile;
 use config::loader::get_config_path;
@@ -53,12 +53,15 @@ fn help_text() -> String {
 }
 
 fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
+    let subcommands =
+        vec![SubCommand::with_name("status").about("Status of directories with specified tags")]; // When adding new subcommands remember to update SUBCOMMAND_NAMES in argparse.rs
+
     let parsed_arguments = argparse::parse_arguments();
+    println!("{:#?}", parsed_arguments);
 
     let args = clap::App::new(APP_NAME)
         .version(APP_VERSION)
         .usage(format!("{} [FLAGS] [OPTIONS] [+tag ..] [--] [command]", APP_SHORT_NAME).as_ref())
-        .setting(AppSettings::AllowExternalSubcommands)
         .after_help(help_text().as_ref())
         .arg(
             Arg::with_name(ADD_TAG_ARG)
@@ -97,13 +100,8 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
                 .multiple(false)
                 .help(format!("Will make output from commands executed in parallel with --{} argument print to terminal before every command has been executed.", PARALLEL_TAG).as_ref())
         )
-        .subcommand(
-            // TODO: Move strings to cooler place
-            SubCommand::with_name("status")
-        )
+        .subcommands(subcommands)
         .get_matches_from(&parsed_arguments.before_tags);
-
-    println!("Test {:#?}", parsed_arguments);
 
     argparse::handle_args_to_self(&args, config)
         .and_then(|c| execute::exec(&args, parsed_arguments, c))

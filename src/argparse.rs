@@ -14,6 +14,17 @@ pub struct ParsedArgs {
     pub double_dash: bool, // This is just a field to know whether we have came across a -- argument when parsing
 }
 
+impl ParsedArgs {
+    fn initial() -> ParsedArgs {
+        ParsedArgs {
+            tags: Vec::new(),
+            before_tags: Vec::new(),
+            after_tags: Vec::new(),
+            double_dash: false,
+        }
+    }
+}
+
 pub mod args {
     pub const TAG_PREFIX: &str = "+";
     pub const ADD_TAG_ARG: &str = "add-tag";
@@ -21,33 +32,33 @@ pub mod args {
     pub const PARALLEL_TAG: &str = "parallel";
     pub const LIST_TAGS_ARG: &str = "list-tags";
     pub const CONTINUOUS_OUTPUT_ARG: &str = "continuous-output";
+    pub static SUBCOMMAND_NAMES: &'static [&str] = &["status"];
 }
 
 fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
-    let empty = ParsedArgs {
-        tags: Vec::new(),
-        before_tags: Vec::new(),
-        after_tags: Vec::new(),
-        double_dash: false,
-    };
-    // TODO: This should probably be moved or extracted from clap if possible
-    let subcommands: Vec<&str> = vec!["status"];
+    let any_tags = args.iter().find(|t| t.starts_with(TAG_PREFIX)).is_some();
 
-    args.into_iter().fold(empty, |mut acc, arg| {
-        match arg {
-            a if a == "--" => acc.double_dash = true,
-            a if a.starts_with(TAG_PREFIX) && (acc.after_tags.is_empty() && !acc.double_dash) => {
-                acc.tags.push(a.clone())
-            }
-            a if (!acc.tags.is_empty() && !subcommands.contains(&a.as_str()))
-                || acc.double_dash =>
-            {
-                acc.after_tags.push(a.clone())
-            }
-            a => acc.before_tags.push(a.clone()),
-        };
-        acc
-    })
+    args.into_iter()
+        .fold(ParsedArgs::initial(), |mut acc, arg| {
+            let arg_is_subcmd = SUBCOMMAND_NAMES.contains(&arg.as_str());
+
+            match arg {
+                a if a == "--" => acc.double_dash = true,
+                a if a.starts_with(TAG_PREFIX)
+                    && (acc.after_tags.is_empty() && !acc.double_dash) =>
+                {
+                    acc.tags.push(a.clone())
+                }
+                a if ((!acc.tags.is_empty() || (!any_tags && acc != ParsedArgs::initial()))
+                    && !arg_is_subcmd)
+                    || acc.double_dash =>
+                {
+                    acc.after_tags.push(a.clone())
+                }
+                a => acc.before_tags.push(a.clone()),
+            };
+            acc
+        })
 }
 
 pub fn parse_arguments() -> ParsedArgs {
@@ -169,6 +180,10 @@ mod test {
             "mrt", "+testtag", "+testaru", "+testari", "--", "status",
         ]);
 
+        let test_args3: Vec<String> = to_string_vec(vec!["mrt", "--", "status"]);
+
+        let test_args4: Vec<String> = to_string_vec(vec!["mrt", "status"]);
+
         let expected1 = ParsedArgs {
             tags: to_string_vec(vec!["+testtag", "+testaru", "+testari"]),
             before_tags: to_string_vec(vec!["mrt", "status"]),
@@ -183,10 +198,44 @@ mod test {
             double_dash: true,
         };
 
+        let expected3 = ParsedArgs {
+            tags: to_string_vec(vec![]),
+            before_tags: to_string_vec(vec!["mrt"]),
+            after_tags: to_string_vec(vec!["status"]),
+            double_dash: true,
+        };
+
+        let expected4 = ParsedArgs {
+            tags: to_string_vec(vec![]),
+            before_tags: to_string_vec(vec!["mrt", "status"]),
+            after_tags: to_string_vec(vec![]),
+            double_dash: false,
+        };
+
         let result1 = find_tags_in_args(&test_args1);
         let result2 = find_tags_in_args(&test_args2);
+        let result3 = find_tags_in_args(&test_args3);
+        let result4 = find_tags_in_args(&test_args4);
 
         assert_eq!(result1, expected1);
         assert_eq!(result2, expected2);
+        assert_eq!(result3, expected3);
+        assert_eq!(result4, expected4);
+    }
+
+    #[test]
+    fn test_external_commands_are_parsed_without_tags() {
+        let test_args: Vec<String> = to_string_vec(vec!["mrt", "testingsaru"]);
+
+        let expected = ParsedArgs {
+            tags: to_string_vec(vec![]),
+            before_tags: to_string_vec(vec!["mrt"]),
+            after_tags: to_string_vec(vec!["testingsaru"]),
+            double_dash: false,
+        };
+
+        let result = find_tags_in_args(&test_args);
+
+        assert_eq!(result, expected);
     }
 }
