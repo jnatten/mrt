@@ -1,4 +1,5 @@
 # mrt - Multi Repo Tool
+[![Build Status](https://travis-ci.org/jnatten/mrt.svg?branch=master)](https://travis-ci.org/jnatten/mrt)
 
 A tool to interact with multiple repositories, by executing the specified commands in each context with the specified tag (See EXAMPLES in [usage section](#usage)).
 
