@@ -11,7 +11,6 @@ pub struct ParsedArgs {
     pub tags: Vec<String>,
     pub before_tags: Vec<String>,
     pub after_tags: Vec<String>,
-    pub double_dash: bool, // This is just a field to know whether we have came across a -- argument when parsing
 }
 
 impl ParsedArgs {
@@ -20,7 +19,6 @@ impl ParsedArgs {
             tags: Vec::new(),
             before_tags: Vec::new(),
             after_tags: Vec::new(),
-            double_dash: false,
         }
     }
 }
@@ -39,22 +37,31 @@ fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
     let any_tags = args.iter().find(|t| t.starts_with(TAG_PREFIX)).is_some();
 
     let mut has_encountered_non_subcommand = false;
+    let mut has_encountered_subcommand = false;
+    let mut double_dash = false;
 
     args.into_iter()
         .fold(ParsedArgs::initial(), |mut acc, arg| {
+            if SUBCOMMAND_NAMES.contains(&arg.as_str()) && !has_encountered_non_subcommand {
+                has_encountered_subcommand = true;
+            }
+
             let arg_is_subcmd = SUBCOMMAND_NAMES.contains(&arg.as_str()) || arg.starts_with("-");
 
+            let is_first_arg = acc != ParsedArgs::initial();
+            let found_tags = !acc.tags.is_empty();
+
+            let found_tags_or_no_tags =
+                (found_tags || (!any_tags && is_first_arg)) && !has_encountered_subcommand;
+            let isnt_subcmd = !arg_is_subcmd || has_encountered_non_subcommand;
+
+            let is_tag_before_cmd =
+                arg.starts_with(TAG_PREFIX) && (acc.after_tags.is_empty() && !double_dash);
+
             match arg {
-                a if a == "--" => acc.double_dash = true,
-                a if a.starts_with(TAG_PREFIX)
-                    && (acc.after_tags.is_empty() && !acc.double_dash) =>
-                {
-                    acc.tags.push(a.clone())
-                }
-                a if ((!acc.tags.is_empty() || (!any_tags && acc != ParsedArgs::initial()))
-                    && (!arg_is_subcmd || has_encountered_non_subcommand))
-                    || acc.double_dash =>
-                {
+                a if a == "--" => double_dash = true,
+                a if is_tag_before_cmd => acc.tags.push(a.clone()),
+                a if (found_tags_or_no_tags && isnt_subcmd) || double_dash => {
                     has_encountered_non_subcommand = true;
                     acc.after_tags.push(a.clone())
                 }
@@ -149,7 +156,6 @@ mod test {
             tags: to_string_vec(vec!["+testtag"]),
             before_tags: to_string_vec(vec!["mrt", "-p"]),
             after_tags: to_string_vec(vec!["ls", "-l", "-h"]),
-            double_dash: false,
         };
 
         let result = find_tags_in_args(&test_args);
@@ -167,7 +173,6 @@ mod test {
             tags: to_string_vec(vec!["+testtag", "+testaru", "+testari", "+x"]),
             before_tags: to_string_vec(vec!["mrt"]),
             after_tags: to_string_vec(vec!["ls", "-l", "-h"]),
-            double_dash: false,
         };
 
         let result = find_tags_in_args(&test_args);
@@ -191,28 +196,24 @@ mod test {
             tags: to_string_vec(vec!["+testtag", "+testaru", "+testari"]),
             before_tags: to_string_vec(vec!["mrt", "status"]),
             after_tags: to_string_vec(vec![]),
-            double_dash: false,
         };
 
         let expected2 = ParsedArgs {
             tags: to_string_vec(vec!["+testtag", "+testaru", "+testari"]),
             before_tags: to_string_vec(vec!["mrt"]),
             after_tags: to_string_vec(vec!["status"]),
-            double_dash: true,
         };
 
         let expected3 = ParsedArgs {
             tags: to_string_vec(vec![]),
             before_tags: to_string_vec(vec!["mrt"]),
             after_tags: to_string_vec(vec!["status"]),
-            double_dash: true,
         };
 
         let expected4 = ParsedArgs {
             tags: to_string_vec(vec![]),
             before_tags: to_string_vec(vec!["mrt", "status"]),
             after_tags: to_string_vec(vec![]),
-            double_dash: false,
         };
 
         let result1 = find_tags_in_args(&test_args1);
@@ -234,7 +235,6 @@ mod test {
             tags: to_string_vec(vec![]),
             before_tags: to_string_vec(vec!["mrt"]),
             after_tags: to_string_vec(vec!["testingsaru"]),
-            double_dash: false,
         };
 
         let result = find_tags_in_args(&test_args);
@@ -251,14 +251,12 @@ mod test {
             tags: to_string_vec(vec!["+testtag"]),
             before_tags: to_string_vec(vec!["mrt", "status"]),
             after_tags: to_string_vec(vec![]),
-            double_dash: false,
         };
 
         let expected2 = ParsedArgs {
             tags: to_string_vec(vec!["+testtag"]),
             before_tags: to_string_vec(vec!["mrt"]),
             after_tags: to_string_vec(vec!["git", "status"]),
-            double_dash: false,
         };
 
         let result1 = find_tags_in_args(&test_args1);
@@ -270,15 +268,14 @@ mod test {
 
     #[test]
     fn test_sub_subcommands_are_parsed_as_before_tags() {
-        let test_args1: Vec<String> = to_string_vec(vec!["mrt", "+testtag", "status", "-l", "-a", "apekatt"]);
+        let test_args1: Vec<String> =
+            to_string_vec(vec!["mrt", "+testtag", "status", "-l", "-a", "apekatt"]);
 
         let expected1 = ParsedArgs {
             tags: to_string_vec(vec!["+testtag"]),
             before_tags: to_string_vec(vec!["mrt", "status", "-l", "-a", "apekatt"]),
             after_tags: to_string_vec(vec![]),
-            double_dash: false,
         };
-
 
         let result1 = find_tags_in_args(&test_args1);
 
