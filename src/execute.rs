@@ -122,14 +122,16 @@ fn exec_all(
 
 fn exec_at_path(
     path: String,
-    cmd: String,
+    command: String,
     args: &[String],
     print: bool,
 ) -> Result<ExecutionOutput, MrtError> {
-    let mut cmd = Command::new(cmd);
-    cmd.args(args);
-    cmd.current_dir(&path);
-    let output = cmd.output()?;
+    let cmd = Command::new(&command);
+    let mut colorized_cmd = add_custom_color_arguments(&command, cmd);
+    colorized_cmd.args(args);
+    colorized_cmd.current_dir(&path);
+
+    let output = colorized_cmd.output()?;
 
     let stdout_string = std::str::from_utf8(&output.stdout);
     let stderr_string = std::str::from_utf8(&output.stderr);
@@ -157,4 +159,15 @@ fn exec_at_path(
             Err(MrtError::new("Couldn't convert output to string..."))
         }
     }
+}
+
+fn add_custom_color_arguments(cmd_name: &String, mut command: Command) -> Command {
+    // TODO: Is it possible/easy to simulate a tty here so auto coloring for most apps could work?
+    if cmd_name == "git" {
+        command.args(&["-c", "color.ui=always"]);
+    } else if cmd_name == "ls" {
+        command.args(&["--color=always"]);
+    }
+
+    command
 }
