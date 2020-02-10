@@ -57,7 +57,6 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
         vec![SubCommand::with_name("status").about("Status of directories with specified tags")]; // When adding new subcommands remember to update SUBCOMMAND_NAMES in argparse.rs
 
     let parsed_arguments = argparse::parse_arguments();
-    println!("{:#?}", parsed_arguments);
 
     let args = clap::App::new(APP_NAME)
         .version(APP_VERSION)

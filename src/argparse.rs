@@ -267,4 +267,21 @@ mod test {
         assert_eq!(result1, expected1);
         assert_eq!(result2, expected2);
     }
+
+    #[test]
+    fn test_sub_subcommands_are_parsed_as_before_tags() {
+        let test_args1: Vec<String> = to_string_vec(vec!["mrt", "+testtag", "status", "-l", "-a", "apekatt"]);
+
+        let expected1 = ParsedArgs {
+            tags: to_string_vec(vec!["+testtag"]),
+            before_tags: to_string_vec(vec!["mrt", "status", "-l", "-a", "apekatt"]),
+            after_tags: to_string_vec(vec![]),
+            double_dash: false,
+        };
+
+
+        let result1 = find_tags_in_args(&test_args1);
+
+        assert_eq!(result1, expected1);
+    }
 }
