@@ -2,6 +2,7 @@ mod argparse;
 mod config;
 mod execute;
 mod mrt_errors;
+mod subcommands;
 
 const APP_NAME: &str = "Multi Repo Tool";
 const APP_SHORT_NAME: &str = "mrt";
@@ -102,7 +103,7 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
         .subcommands(subcommands)
         .get_matches_from(&parsed_arguments.before_tags);
 
-    argparse::handle_args_to_self(&args, config)
+    argparse::handle_args_to_self(&args, &parsed_arguments, config)
         .and_then(|c| execute::exec(&args, parsed_arguments, c))
 }
 

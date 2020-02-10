@@ -1,10 +1,12 @@
 use super::config;
 use super::config::configmodels::*;
+use super::subcommands;
 use crate::mrt_errors::MrtError;
 use args::*;
 use clap::{ArgMatches, Values};
 use std::env;
 use std::io::Result;
+use std::process::exit;
 
 #[derive(Debug, PartialOrd, PartialEq)]
 pub struct ParsedArgs {
@@ -79,6 +81,7 @@ pub fn parse_arguments() -> ParsedArgs {
 
 pub fn handle_args_to_self(
     args: &ArgMatches,
+    parsed_arguments: &ParsedArgs,
     config: ConfigFile,
 ) -> std::result::Result<ConfigFile, MrtError> {
     let config_with_added = match args.values_of(ADD_TAG_ARG) {
@@ -92,7 +95,7 @@ pub fn handle_args_to_self(
             None => Ok(conf),
         });
 
-    match config_with_removed {
+    let updated_config = match config_with_removed {
         Ok(conf) => {
             if args.is_present(LIST_TAGS_ARG) {
                 println!("Config Version: {}", conf.version);
@@ -106,6 +109,14 @@ pub fn handle_args_to_self(
             Ok(conf)
         }
         Err(err) => Err(MrtError::from(err)),
+    };
+
+    match args.subcommand_name() {
+        Some(subcmd) if subcmd == "status" => {
+            subcommands::status::status(parsed_arguments);
+            exit(0)
+        }
+        _ => updated_config,
     }
 }
 
