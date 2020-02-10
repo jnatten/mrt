@@ -38,9 +38,11 @@ pub mod args {
 fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
     let any_tags = args.iter().find(|t| t.starts_with(TAG_PREFIX)).is_some();
 
+    let mut has_encountered_non_subcommand = false;
+
     args.into_iter()
         .fold(ParsedArgs::initial(), |mut acc, arg| {
-            let arg_is_subcmd = SUBCOMMAND_NAMES.contains(&arg.as_str());
+            let arg_is_subcmd = SUBCOMMAND_NAMES.contains(&arg.as_str()) || arg.starts_with("-");
 
             match arg {
                 a if a == "--" => acc.double_dash = true,
@@ -50,9 +52,10 @@ fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
                     acc.tags.push(a.clone())
                 }
                 a if ((!acc.tags.is_empty() || (!any_tags && acc != ParsedArgs::initial()))
-                    && !arg_is_subcmd)
+                    && (!arg_is_subcmd || has_encountered_non_subcommand))
                     || acc.double_dash =>
                 {
+                    has_encountered_non_subcommand = true;
                     acc.after_tags.push(a.clone())
                 }
                 a => acc.before_tags.push(a.clone()),
@@ -237,5 +240,31 @@ mod test {
         let result = find_tags_in_args(&test_args);
 
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_that_subcommands_are_not_subcommands_when_after_external() {
+        let test_args1: Vec<String> = to_string_vec(vec!["mrt", "+testtag", "status"]);
+        let test_args2: Vec<String> = to_string_vec(vec!["mrt", "+testtag", "git", "status"]);
+
+        let expected1 = ParsedArgs {
+            tags: to_string_vec(vec!["+testtag"]),
+            before_tags: to_string_vec(vec!["mrt", "status"]),
+            after_tags: to_string_vec(vec![]),
+            double_dash: false,
+        };
+
+        let expected2 = ParsedArgs {
+            tags: to_string_vec(vec!["+testtag"]),
+            before_tags: to_string_vec(vec!["mrt"]),
+            after_tags: to_string_vec(vec!["git", "status"]),
+            double_dash: false,
+        };
+
+        let result1 = find_tags_in_args(&test_args1);
+        let result2 = find_tags_in_args(&test_args2);
+
+        assert_eq!(result1, expected1);
+        assert_eq!(result2, expected2);
     }
 }
