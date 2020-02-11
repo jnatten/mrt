@@ -1,3 +1,5 @@
+#![feature(option_flattening)]
+
 mod argparse;
 mod config;
 mod execute;

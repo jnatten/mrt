@@ -14,7 +14,7 @@ struct ExecutionOutput {
     stderr: String,
 }
 
-fn get_all_paths(tags: Vec<String>, config: ConfigFile) -> Vec<String> {
+pub fn get_all_paths(tags: &Vec<String>, config: &ConfigFile) -> Vec<String> {
     let mut all_paths: Vec<String> = tags
         .iter()
         .flat_map(|t| {
@@ -63,7 +63,7 @@ pub fn exec(
         Some(prog) => {
             let args = &parsed_args.after_tags[1..];
 
-            let all_paths = get_all_paths(parsed_args.tags, config);
+            let all_paths = get_all_paths(&parsed_args.tags, &config);
 
             let should_print_instantly = (!clap_args.is_present(PARALLEL_TAG))
                 || clap_args.is_present(CONTINUOUS_OUTPUT_ARG);

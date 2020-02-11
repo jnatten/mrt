@@ -113,7 +113,8 @@ pub fn handle_args_to_self(
 
     match args.subcommand_name() {
         Some(subcmd) if subcmd == "status" => {
-            subcommands::status::status(parsed_arguments);
+            let aa = updated_config?;
+            subcommands::status::status(args, parsed_arguments, aa);
             exit(0)
         }
         _ => updated_config,
