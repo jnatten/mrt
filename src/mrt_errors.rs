@@ -1,5 +1,4 @@
 use std::error;
-use std::error::Error;
 use std::fmt;
 
 #[derive(Debug, Clone)]
@@ -29,12 +28,12 @@ impl error::Error for MrtError {
 
 impl From<std::io::Error> for MrtError {
     fn from(err: std::io::Error) -> Self {
-        MrtError::new(err.description())
+        MrtError::new(err.to_string().as_str())
     }
 }
 
 impl From<rayon::ThreadPoolBuildError> for MrtError {
     fn from(err: rayon::ThreadPoolBuildError) -> Self {
-        MrtError::new(err.description())
+        MrtError::new(err.to_string().as_str())
     }
 }

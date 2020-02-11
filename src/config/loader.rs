@@ -15,7 +15,7 @@ pub fn load_config(path: &String) -> Result<ConfigFile> {
     Ok(data)
 }
 
-pub fn save_config(config: ConfigFile) -> Result<(ConfigFile)> {
+pub fn save_config(config: ConfigFile) -> Result<ConfigFile> {
     let config_path = get_config_path().unwrap_or(String::from(".mrtconfig.json"));
     save_config_at(&config_path, &config).map(|()| config)
 }
@@ -29,7 +29,7 @@ fn save_config_at(path: &String, config_struct: &ConfigFile) -> Result<()> {
     Ok(())
 }
 
-pub fn create_new_empty_config(path: &String) -> Result<(ConfigFile)> {
+pub fn create_new_empty_config(path: &String) -> Result<ConfigFile> {
     let new_config = ConfigFile {
         version: String::from(APP_VERSION),
         tags: HashMap::new(),
