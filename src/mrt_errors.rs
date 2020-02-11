@@ -12,6 +12,10 @@ impl MrtError {
             msg: msg.to_string(),
         }
     }
+
+    pub fn from_string(msg: String) -> MrtError {
+        MrtError { msg }
+    }
 }
 
 impl fmt::Display for MrtError {
@@ -28,12 +32,12 @@ impl error::Error for MrtError {
 
 impl From<std::io::Error> for MrtError {
     fn from(err: std::io::Error) -> Self {
-        MrtError::new(err.to_string().as_str())
+        MrtError::from_string(err.to_string())
     }
 }
 
 impl From<rayon::ThreadPoolBuildError> for MrtError {
     fn from(err: rayon::ThreadPoolBuildError) -> Self {
-        MrtError::new(err.to_string().as_str())
+        MrtError::from_string(err.to_string())
     }
 }
