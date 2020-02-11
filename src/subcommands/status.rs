@@ -33,7 +33,7 @@ fn format_output(path: &String, out: &Vec<u8>) -> String {
 
     let branch = get_colored_branch(&lines);
     let dirtyness = get_dirtyness(&lines);
-    let behindness: String = get_behindness(&lines);
+    let behindness: String = get_colored_behindness(&lines);
 
     let dirtyness_spaces = get_spaces_with_maxlen(25, dirtyness.len());
     let path_spaces = get_spaces_with_maxlen(50, path.len());
@@ -97,7 +97,7 @@ fn get_branch(lines: &Vec<String>) -> Option<String> {
     })
 }
 
-fn get_behindness(lines: &Vec<String>) -> String {
+fn get_behindness(lines: &Vec<String>) -> Option<String> {
     lines
         .first()
         .map(|branch_line| {
@@ -109,6 +109,10 @@ fn get_behindness(lines: &Vec<String>) -> String {
             }
         })
         .flatten()
+}
+
+fn get_colored_behindness(lines: &Vec<String>) -> String {
+    get_behindness(lines)
         .map(|b| format!(" {}", b.yellow()))
         .unwrap_or(String::new())
 }
