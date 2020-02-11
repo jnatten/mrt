@@ -15,19 +15,28 @@ struct ExecutionOutput {
 }
 
 pub fn get_all_paths(tags: &Vec<String>, config: &ConfigFile) -> Vec<String> {
-    let mut all_paths: Vec<String> = tags
-        .iter()
-        .flat_map(|t| {
-            let tag_without_prefix: &str = t.as_str()[1..].as_ref(); // TODO: slice this in a better way, this may panic!!!
-            match config.tags.get(tag_without_prefix) {
-                Some(tag) => tag.paths.clone(),
-                None => {
-                    println!("Config not found for tag '{}', skipping...", t);
-                    vec![]
+    let mut all_paths: Vec<String> = if tags.is_empty() {
+        let nested_paths: Vec<Vec<String>> = config
+            .tags
+            .iter()
+            .map(|(_tag_name, tag)| tag.paths.iter().cloned().collect())
+            .collect();
+
+        nested_paths.into_iter().flatten().collect()
+    } else {
+        tags.iter()
+            .flat_map(|t| {
+                let tag_without_prefix: &str = t.as_str()[1..].as_ref(); // TODO: slice this in a better way, this may panic!!!
+                match config.tags.get(tag_without_prefix) {
+                    Some(tag) => tag.paths.clone(),
+                    None => {
+                        println!("Config not found for tag '{}', skipping...", t);
+                        vec![]
+                    }
                 }
-            }
-        })
-        .collect();
+            })
+            .collect()
+    };
 
     all_paths.sort();
     all_paths.dedup();
