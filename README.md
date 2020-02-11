@@ -30,7 +30,7 @@ $ mrt -h
 Multi Repo Tool 0.0.1
 
 USAGE:
-    mrt [FLAGS] [OPTIONS] [+tag ..]
+    mrt [FLAGS] [OPTIONS] [+tag ..] [--] [command]
 
 FLAGS:
     -c, --continuous-output    Will make output from commands executed in parallel with --parallel argument print to
@@ -45,6 +45,10 @@ FLAGS:
 OPTIONS:
     -a, --add-tag <TAG_NAME>...    Adds the current directory with specified +tag
     -d, --del-tag <TAG_NAME>...    Deletes the current directory with specified +tag
+
+SUBCOMMANDS:
+    help      Prints this message or the help of the given subcommand(s)
+    status    Status of directories with specified tags
 
 EXAMPLES:
     # Tag current directory with tag `backend`
@@ -64,7 +68,10 @@ EXAMPLES:
 
     # Execute command in all directories tagged with `backend` and `frontend` in parallel
     $ mrt -p +backend +frontend git pull
- 
+
+    # List status of all directories tagged with `backend`
+    $ mrt +backend status
+
 ```
 
 ### Why?

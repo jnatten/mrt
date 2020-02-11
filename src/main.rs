@@ -38,6 +38,9 @@ fn help_text() -> String {
 
     {}
     {}
+
+    {}
+    {}
     ",
         "# Tag current directory with tag `backend`".bright_black(),
         "$ mrt -a backend",
@@ -51,7 +54,9 @@ fn help_text() -> String {
         "$ mrt -p +backend git pull",
         "# Execute command in all directories tagged with `backend` and `frontend` in parallel"
             .bright_black(),
-        "$ mrt -p +backend +frontend git pull"
+        "$ mrt -p +backend +frontend git pull",
+        "# List status of all directories tagged with `backend`".bright_black(),
+        "$ mrt +backend status"
     )
 }
 
