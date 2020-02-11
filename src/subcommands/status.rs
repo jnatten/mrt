@@ -3,6 +3,7 @@ use super::super::config::configmodels::ConfigFile;
 use super::super::execute;
 use clap::ArgMatches;
 use colored::Colorize;
+use std::cmp::max;
 use std::process::Command;
 
 pub fn status(args: &ArgMatches, parsed_arguments: &ParsedArgs, config: ConfigFile) {
@@ -29,17 +30,44 @@ fn run_status(path: &String) -> String {
 }
 
 fn format_output(path: &String, out: &Vec<u8>) -> String {
-    let x = String::from_utf8_lossy(out).to_string();
-    let y: Vec<String> = x.split('\n').map(String::from).collect();
-    let branch: String = get_branch(&y).unwrap_or(String::from("<UNKNOWN>"));
-    let behindness: String = get_behindness(&y)
+    let output_string = String::from_utf8_lossy(out).to_string();
+    let lines: Vec<String> = output_string.split('\n').map(String::from).collect();
+
+    let branch: String = get_branch(&lines).unwrap_or(String::from("<UNKNOWN>"));
+    let dirtyness = get_dirtyness(&lines);
+
+    let behindness: String = get_behindness(&lines)
         .map(|b| format!(" {}", b.yellow()))
         .unwrap_or(String::new());
 
-    let path_spaces_to_add = 50 - path.len();
-    let path_spaces = " ".repeat(path_spaces_to_add);
+    let dirtyness_spaces = get_spaces_with_maxlen(25, dirtyness.len());
+    let path_spaces = get_spaces_with_maxlen(50, path.len());
 
-    format!("{}{}{}{}", path, path_spaces, branch, behindness) // TODO: Expand with dirtyness
+    format!(
+        "{}{}{}{}{}{}",
+        path, path_spaces, dirtyness, dirtyness_spaces, branch, behindness
+    )
+}
+
+fn get_spaces_with_maxlen(max_len: i32, string_length: usize) -> String {
+    let x = max_len - (string_length as i32);
+    let y: usize = max(1, x) as usize;
+    " ".repeat(y)
+}
+
+fn get_dirtyness(lines: &Vec<String>) -> String {
+    let modified_files: Vec<String> = lines
+        .clone()
+        .into_iter()
+        .filter(|l| !(l.starts_with("## ") || l.is_empty()))
+        .collect();
+
+    if modified_files.len() > 0 {
+        let text = format!("{} modified", modified_files.len());
+        String::from(format!("{}", text.red()))
+    } else {
+        String::from(format!("{}", "Clean".green()))
+    }
 }
 
 fn get_branch(lines: &Vec<String>) -> Option<String> {
