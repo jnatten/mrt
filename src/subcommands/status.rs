@@ -2,13 +2,11 @@ use super::super::argparse::ParsedArgs;
 use super::super::config::configmodels::ConfigFile;
 use super::super::execute;
 use clap::ArgMatches;
-use colored::Colorize;
+use colored::{ColoredString, Colorize};
 use std::cmp::max;
 use std::process::Command;
 
 pub fn status(args: &ArgMatches, parsed_arguments: &ParsedArgs, config: ConfigFile) {
-    println!("These are your tags {:#?}", parsed_arguments.tags);
-
     let paths = execute::get_all_paths(&parsed_arguments.tags, &config);
 
     for path in paths {
@@ -33,12 +31,9 @@ fn format_output(path: &String, out: &Vec<u8>) -> String {
     let output_string = String::from_utf8_lossy(out).to_string();
     let lines: Vec<String> = output_string.split('\n').map(String::from).collect();
 
-    let branch: String = get_branch(&lines).unwrap_or(String::from("<UNKNOWN>"));
+    let branch = get_colored_branch(&lines);
     let dirtyness = get_dirtyness(&lines);
-
-    let behindness: String = get_behindness(&lines)
-        .map(|b| format!(" {}", b.yellow()))
-        .unwrap_or(String::new());
+    let behindness: String = get_behindness(&lines);
 
     let dirtyness_spaces = get_spaces_with_maxlen(25, dirtyness.len());
     let path_spaces = get_spaces_with_maxlen(50, path.len());
@@ -70,6 +65,19 @@ fn get_dirtyness(lines: &Vec<String>) -> String {
     }
 }
 
+fn get_colored_branch(lines: &Vec<String>) -> ColoredString {
+    get_branch(lines)
+        .map(|s| {
+            // TODO: Consider checking what is default branch rather than assume master
+            if s != "master" {
+                s.bright_black()
+            } else {
+                s.normal()
+            }
+        })
+        .unwrap_or("<UNKNOWN>".yellow())
+}
+
 fn get_branch(lines: &Vec<String>) -> Option<String> {
     lines.first().map(|branch_line| {
         let mut split: Vec<String> = branch_line.split("## ").map(String::from).collect();
@@ -89,7 +97,7 @@ fn get_branch(lines: &Vec<String>) -> Option<String> {
     })
 }
 
-fn get_behindness(lines: &Vec<String>) -> Option<String> {
+fn get_behindness(lines: &Vec<String>) -> String {
     lines
         .first()
         .map(|branch_line| {
@@ -101,6 +109,8 @@ fn get_behindness(lines: &Vec<String>) -> Option<String> {
             }
         })
         .flatten()
+        .map(|b| format!(" {}", b.yellow()))
+        .unwrap_or(String::new())
 }
 
 #[cfg(test)]
