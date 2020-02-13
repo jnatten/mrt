@@ -5,7 +5,9 @@ use crate::argparse::args::*;
 use clap::ArgMatches;
 use colored::Colorize;
 use rayon::prelude::*;
-use std::process::Command;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
+use std::process::{Command, Stdio};
 use std::result::Result;
 
 struct ExecutionOutput {
@@ -135,8 +137,6 @@ fn exec_at_path(
     args: &[String],
     print: bool,
 ) -> Result<ExecutionOutput, MrtError> {
-    let mut cmd = Command::new("bash");
-
     let bash_command_arg = format!(
         "{}{} {}",
         &command,
@@ -144,37 +144,50 @@ fn exec_at_path(
         args.join(" ")
     );
 
-    cmd.args(&["-c", bash_command_arg.as_str()]);
-    cmd.current_dir(&path);
+    let mut cmd = Command::new("bash");
+    cmd.args(&["-c", bash_command_arg.as_str()])
+        .current_dir(&path);
 
-    let output = cmd.output()?;
+    let mut stdout_l: Vec<String> = Vec::new();
+    let mut stderr_l: Vec<String> = Vec::new();
 
-    let stdout_string = std::str::from_utf8(&output.stdout);
-    let stderr_string = std::str::from_utf8(&output.stderr);
-    match (stdout_string, stderr_string) {
-        (Ok(out), Ok(err)) => {
-            let exit_code: i32 = match output.status.code() {
-                Some(int) => int,
-                _ => -255,
-            };
+    let mut child = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
+    let stdout = child.stdout.as_mut().unwrap();
+    let stdout_reader = BufReader::new(stdout);
+    let stdout_lines = stdout_reader.lines();
 
-            let execution = ExecutionOutput {
-                exit_code,
-                stdout: String::from(out),
-                stderr: String::from(err),
-            };
+    let stderr = child.stderr.as_mut().unwrap();
+    let stderr_reader = BufReader::new(stderr);
+    let stderr_lines = stderr_reader.lines();
 
-            if print {
-                print_result(&path, &execution);
-            }
-
-            Ok(execution)
-        }
-        _ => {
-            println!("Couldn't convert output to string...");
-            Err(MrtError::new("Couldn't convert output to string..."))
-        }
+    let headline = format!("\n\nin {}", path.as_str());
+    if print {
+        println!("{}\n", headline.bright_black());
     }
+
+    for line in stdout_lines {
+        let l = line?;
+        if print {
+            println!("{}", &l);
+        }
+        stdout_l.push(l);
+    }
+
+    for line in stderr_lines {
+        let l = line?;
+        if print {
+            println!("{}", &l);
+        }
+        stderr_l.push(l);
+    }
+    let code = child.wait()?;
+
+    let execution = ExecutionOutput {
+        exit_code: code.code().unwrap_or(-1),
+        stdout: stdout_l.join("\n"),
+        stderr: stderr_l.join("\n"),
+    };
+    Ok(execution)
 }
 
 fn get_color_args(cmd_name: &String) -> Option<&str> {
