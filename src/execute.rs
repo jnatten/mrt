@@ -6,7 +6,6 @@ use clap::ArgMatches;
 use colored::Colorize;
 use rayon::prelude::*;
 use std::io::{BufRead, BufReader};
-use std::path::Path;
 use std::process::{Command, Stdio};
 use std::result::Result;
 
@@ -79,12 +78,15 @@ pub fn exec(
             let should_print_instantly = (!clap_args.is_present(PARALLEL_TAG))
                 || clap_args.is_present(CONTINUOUS_OUTPUT_ARG);
 
+            let execute_in_shell = clap_args.is_present(SHELL_EXECUTION_ARG);
+
             let execute_output = exec_all(
                 all_paths,
                 prog,
                 args,
                 clap_args.is_present(PARALLEL_TAG),
                 should_print_instantly,
+                execute_in_shell,
             )?;
 
             if !should_print_instantly {
@@ -107,6 +109,7 @@ fn exec_all(
     args: &[String],
     in_parallel: bool,
     should_print_instantly: bool,
+    execute_in_shell: bool,
 ) -> Result<Vec<(String, Result<ExecutionOutput, MrtError>)>, MrtError> {
     let execute_func = |path: &String| {
         (
@@ -116,6 +119,7 @@ fn exec_all(
                 prog.to_string(),
                 args,
                 should_print_instantly,
+                execute_in_shell,
             ),
         )
     };
@@ -136,17 +140,24 @@ fn exec_at_path(
     command: String,
     args: &[String],
     print: bool,
+    execute_in_shell: bool,
 ) -> Result<ExecutionOutput, MrtError> {
-    let bash_command_arg = format!(
-        "{}{} {}",
-        &command,
-        get_color_args(&command).unwrap_or(""),
-        args.join(" ")
-    );
+    let color_args = get_color_args(&command);
 
-    let mut cmd = Command::new("bash");
-    cmd.args(&["-c", bash_command_arg.as_str()])
-        .current_dir(&path);
+    let mut cmd = if execute_in_shell {
+        let bash_command_arg = format!("{} {} {}", &command, color_args.join(" "), args.join(" "));
+
+        let mut cmd = Command::new("bash");
+        cmd.args(&["-c", bash_command_arg.as_str()]);
+        cmd
+    } else {
+        let mut cmd = Command::new(&command);
+        cmd.args(color_args);
+        cmd.args(args);
+        cmd
+    };
+
+    cmd.current_dir(&path);
 
     let mut stdout_l: Vec<String> = Vec::new();
     let mut stderr_l: Vec<String> = Vec::new();
@@ -190,13 +201,13 @@ fn exec_at_path(
     Ok(execution)
 }
 
-fn get_color_args(cmd_name: &String) -> Option<&str> {
+fn get_color_args(cmd_name: &String) -> Vec<&str> {
     // TODO: Is it possible/easy to simulate a tty here so auto coloring for most apps could work?
     if cmd_name == "git" {
-        Some(" -c color.ui=always")
+        vec!["-c", "color.ui=always"]
     } else if cmd_name == "ls" {
-        Some(" --color=always")
+        vec!["--color=always"]
     } else {
-        None
+        vec![]
     }
 }

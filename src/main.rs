@@ -105,6 +105,13 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
                 .multiple(false)
                 .help(format!("Will make output from commands executed in parallel with --{} argument print to terminal before every command has been executed.", PARALLEL_TAG).as_ref())
         )
+        .arg(
+            Arg::with_name(SHELL_EXECUTION_ARG)
+                .short("b")
+                .long(SHELL_EXECUTION_ARG)
+                .multiple(false)
+                .help("Will make command be executed in the context of a shell. IE: `bash -c '<command>'`")
+        )
         .subcommands(subcommands)
         .get_matches_from(&parsed_arguments.before_tags);
 
