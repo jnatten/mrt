@@ -90,10 +90,16 @@ fn get_branch(lines: &Vec<String>) -> Option<String> {
 
         let mut dotsplit: Vec<String> = joined.split("...").map(String::from).collect();
         let middle_idx = dotsplit.len() / 2;
-        while dotsplit.len() > middle_idx {
-            dotsplit.pop();
+
+        // If no remote
+        if middle_idx == 0 {
+            dotsplit.pop().unwrap_or(String::new())
+        } else {
+            while dotsplit.len() > middle_idx {
+                dotsplit.pop();
+            }
+            dotsplit.join("...")
         }
-        dotsplit.join("...")
     })
 }
 
@@ -159,5 +165,12 @@ mod test {
         assert_eq!(get_branch(&input3), Some(expected3));
         assert_eq!(get_branch(&input4), Some(expected4));
         assert_eq!(get_branch(&input5), Some(expected5));
+    }
+
+    #[test]
+    fn test_get_branch_without_remote() {
+        let input = to_string_vec(vec!["## some-branch"]);
+        let expected = String::from("some-branch");
+        assert_eq!(get_branch(&input), Some(expected));
     }
 }
