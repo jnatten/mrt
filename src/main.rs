@@ -3,6 +3,7 @@ mod config;
 mod execute;
 mod mrt_errors;
 mod subcommands;
+mod util;
 
 const APP_NAME: &str = "Multi Repo Tool";
 const APP_SHORT_NAME: &str = "mrt";

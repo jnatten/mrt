@@ -1,6 +1,7 @@
 use super::super::argparse::ParsedArgs;
 use super::super::config::configmodels::ConfigFile;
 use super::super::execute;
+use super::super::util;
 use clap::ArgMatches;
 use colored::{ColoredString, Colorize};
 use std::cmp::max;
@@ -38,9 +39,11 @@ fn format_output(path: &String, out: &Vec<u8>) -> String {
     let dirtyness_spaces = get_spaces_with_maxlen(25, dirtyness.len());
     let path_spaces = get_spaces_with_maxlen(50, path.len());
 
+    let formatted_path = util::format_path(path);
+
     format!(
         "{}{}{}{}{}{}",
-        path, path_spaces, dirtyness, dirtyness_spaces, branch, behindness
+        formatted_path, path_spaces, dirtyness, dirtyness_spaces, branch, behindness
     )
 }
 
