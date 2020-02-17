@@ -18,7 +18,6 @@ pub fn format_path(path: &String) -> String {
         _ => dir_name.to_string(),
     };
 
-    let separator = "/";
-    let prefix = format!("{}{}", dir_to_use, separator);
+    let prefix = format!("{}{}", dir_to_use, std::path::MAIN_SEPARATOR);
     format!("{}{}", prefix.dimmed(), base_name.clear())
 }
