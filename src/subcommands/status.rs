@@ -2,12 +2,22 @@ use super::super::argparse::ParsedArgs;
 use super::super::config::configmodels::ConfigFile;
 use super::super::execute;
 use super::super::util;
-use clap::ArgMatches;
+use crate::subcommands::subcommand::MrtSubcommand;
+use clap::{ArgMatches, SubCommand};
 use colored::{ColoredString, Colorize};
 use std::cmp::max;
 use std::process::Command;
 
-pub fn status(args: &ArgMatches, parsed_arguments: &ParsedArgs, config: ConfigFile) {
+pub fn get() -> MrtSubcommand {
+    MrtSubcommand {
+        name: String::from("status"),
+        run_subcommand: status,
+        doc: SubCommand::with_name("status")
+            .about("Status of directories with specified tags"),
+    }
+}
+
+fn status(args: &ArgMatches, parsed_arguments: &ParsedArgs, config: ConfigFile) {
     let paths = execute::get_all_paths(&parsed_arguments.tags, &config);
 
     for path in paths {

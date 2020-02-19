@@ -1,7 +1,7 @@
 use super::config;
 use super::config::configmodels::*;
-use super::subcommands;
 use crate::mrt_errors::MrtError;
+use crate::subcommands::subcommand::MrtSubcommand;
 use args::*;
 use clap::{ArgMatches, Values};
 use std::env;
@@ -81,6 +81,7 @@ pub fn parse_arguments() -> ParsedArgs {
 }
 
 pub fn handle_args_to_self(
+    subcommands: Vec<MrtSubcommand>,
     args: &ArgMatches,
     parsed_arguments: &ParsedArgs,
     config: ConfigFile,
@@ -113,9 +114,10 @@ pub fn handle_args_to_self(
     };
 
     match args.subcommand_name() {
-        Some(subcmd) if subcmd == "status" => {
-            let aa = updated_config?;
-            subcommands::status::status(args, parsed_arguments, aa);
+        Some(subcmd) => {
+            let found_cmd = subcommands.iter().find(|cmd| cmd.name == subcmd);
+            let successful_config = updated_config?;
+            found_cmd.map(|found| (found.run_subcommand)(args, parsed_arguments, successful_config));
             exit(0)
         }
         _ => updated_config,

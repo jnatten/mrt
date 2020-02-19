@@ -9,13 +9,15 @@ const APP_NAME: &str = "Multi Repo Tool";
 const APP_SHORT_NAME: &str = "mrt";
 const APP_VERSION: &str = "0.0.1";
 
+use crate::subcommands::subcommand::MrtSubcommand;
 use argparse::args::*;
-use clap::{Arg, SubCommand};
+use clap::Arg;
 use colored::Colorize;
 use config::configmodels::ConfigFile;
 use config::loader::get_config_path;
 use std::process::exit;
 use std::result::Result;
+use subcommands::status;
 
 fn help_text() -> String {
     format!(
@@ -42,9 +44,9 @@ fn help_text() -> String {
     {}
     ",
         "# Tag current directory with tag `backend`".bright_black(),
-        "$ mrt -a backend",
+        "$ mrt -a=backend",
         "# Remove tag `backend` from current directory".bright_black(),
-        "$ mrt -d backend",
+        "$ mrt -d=backend",
         "# List tagged directories".bright_black(),
         "$ mrt -l",
         "# Execute command in all directories tagged with `backend`".bright_black(),
@@ -60,8 +62,9 @@ fn help_text() -> String {
 }
 
 fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
-    let subcommands =
-        vec![SubCommand::with_name("status").about("Status of directories with specified tags")]; // When adding new subcommands remember to update SUBCOMMAND_NAMES in argparse.rs
+    // When adding new subcommands remember to update SUBCOMMAND_NAMES in argparse.rs
+
+    let subcmds: Vec<MrtSubcommand> = vec![status::get()];
 
     let parsed_arguments = argparse::parse_arguments();
 
@@ -113,10 +116,10 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
                 .multiple(false)
                 .help("Will make command be executed in the context of a shell. IE: `bash -c '<command>'`")
         )
-        .subcommands(subcommands)
+        .subcommands(subcmds.iter().map(|cmd| cmd.doc.to_owned()))
         .get_matches_from(&parsed_arguments.before_tags);
 
-    argparse::handle_args_to_self(&args, &parsed_arguments, config)
+    argparse::handle_args_to_self(subcmds, &args, &parsed_arguments, config)
         .and_then(|c| execute::exec(&args, parsed_arguments, c))
 }
 
