@@ -33,10 +33,9 @@ pub mod args {
     pub const LIST_TAGS_ARG: &str = "list-tags";
     pub const CONTINUOUS_OUTPUT_ARG: &str = "continuous-output";
     pub const SHELL_EXECUTION_ARG: &str = "bash";
-    pub static SUBCOMMAND_NAMES: &'static [&str] = &["status"];
 }
 
-fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
+fn find_tags_in_args(args: &Vec<String>, subcommand_names: &Vec<&String>) -> ParsedArgs {
     let any_tags = args.iter().find(|t| t.starts_with(TAG_PREFIX)).is_some();
 
     let mut has_encountered_non_subcommand = false;
@@ -45,11 +44,11 @@ fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
 
     args.into_iter()
         .fold(ParsedArgs::initial(), |mut acc, arg| {
-            if SUBCOMMAND_NAMES.contains(&arg.as_str()) && !has_encountered_non_subcommand {
+            if subcommand_names.contains(&arg) && !has_encountered_non_subcommand {
                 has_encountered_subcommand = true;
             }
 
-            let arg_is_subcmd = SUBCOMMAND_NAMES.contains(&arg.as_str()) || arg.starts_with("-");
+            let arg_is_subcmd = subcommand_names.contains(&arg) || arg.starts_with("-");
 
             let is_first_arg = acc != ParsedArgs::initial();
             let found_tags = !acc.tags.is_empty();
@@ -74,10 +73,12 @@ fn find_tags_in_args(args: &Vec<String>) -> ParsedArgs {
         })
 }
 
-pub fn parse_arguments() -> ParsedArgs {
+pub fn parse_arguments(subcommands: &Vec<MrtSubcommand>) -> ParsedArgs {
+    let subcommand_names: Vec<&String> = subcommands.iter().map(|x| &x.name).collect();
+
     let args = std::env::args();
     let args_vec = args.collect();
-    find_tags_in_args(&args_vec)
+    find_tags_in_args(&args_vec, &subcommand_names)
 }
 
 pub fn handle_args_to_self(
@@ -117,7 +118,8 @@ pub fn handle_args_to_self(
         Some(subcmd) => {
             let found_cmd = subcommands.iter().find(|cmd| cmd.name == subcmd);
             let successful_config = updated_config?;
-            found_cmd.map(|found| (found.run_subcommand)(args, parsed_arguments, successful_config));
+            found_cmd
+                .map(|found| (found.run_subcommand)(args, parsed_arguments, successful_config));
             exit(0)
         }
         _ => updated_config,
@@ -157,10 +159,16 @@ fn remove_tag_from_current_dir(tags: Values, mut config: ConfigFile) -> Result<C
 #[cfg(test)]
 mod test {
 
+    use super::super::subcommand::get_subcommands;
     use super::*;
 
     fn to_string_vec(v: Vec<&str>) -> Vec<String> {
         v.into_iter().map(|s| s.to_owned()).collect()
+    }
+
+    fn subcmd_names() -> Vec<String> {
+        let names: Vec<String> = get_subcommands().iter().map(|x| x.name.clone()).collect();
+        names
     }
 
     #[test]
@@ -173,7 +181,9 @@ mod test {
             after_tags: to_string_vec(vec!["ls", "-l", "-h"]),
         };
 
-        let result = find_tags_in_args(&test_args);
+        let names = subcmd_names();
+        let s: Vec<&String> = names.iter().collect();
+        let result = find_tags_in_args(&test_args, &s);
 
         assert_eq!(result, expected);
     }
@@ -190,7 +200,9 @@ mod test {
             after_tags: to_string_vec(vec!["ls", "-l", "-h"]),
         };
 
-        let result = find_tags_in_args(&test_args);
+        let names = subcmd_names();
+        let s: Vec<&String> = names.iter().map(|x| x).collect();
+        let result = find_tags_in_args(&test_args, &s);
 
         assert_eq!(result, expected);
     }
@@ -231,10 +243,12 @@ mod test {
             after_tags: to_string_vec(vec![]),
         };
 
-        let result1 = find_tags_in_args(&test_args1);
-        let result2 = find_tags_in_args(&test_args2);
-        let result3 = find_tags_in_args(&test_args3);
-        let result4 = find_tags_in_args(&test_args4);
+        let names = subcmd_names();
+        let s: Vec<&String> = names.iter().map(|x| x).collect();
+        let result1 = find_tags_in_args(&test_args1, &s);
+        let result2 = find_tags_in_args(&test_args2, &s);
+        let result3 = find_tags_in_args(&test_args3, &s);
+        let result4 = find_tags_in_args(&test_args4, &s);
 
         assert_eq!(result1, expected1);
         assert_eq!(result2, expected2);
@@ -252,7 +266,9 @@ mod test {
             after_tags: to_string_vec(vec!["testingsaru"]),
         };
 
-        let result = find_tags_in_args(&test_args);
+        let names = subcmd_names();
+        let s: Vec<&String> = names.iter().map(|x| x).collect();
+        let result = find_tags_in_args(&test_args, &s);
 
         assert_eq!(result, expected);
     }
@@ -274,8 +290,10 @@ mod test {
             after_tags: to_string_vec(vec!["git", "status"]),
         };
 
-        let result1 = find_tags_in_args(&test_args1);
-        let result2 = find_tags_in_args(&test_args2);
+        let names = subcmd_names();
+        let s: Vec<&String> = names.iter().map(|x| x).collect();
+        let result1 = find_tags_in_args(&test_args1, &s);
+        let result2 = find_tags_in_args(&test_args2, &s);
 
         assert_eq!(result1, expected1);
         assert_eq!(result2, expected2);
@@ -292,7 +310,9 @@ mod test {
             after_tags: to_string_vec(vec![]),
         };
 
-        let result1 = find_tags_in_args(&test_args1);
+        let names = subcmd_names();
+        let s: Vec<&String> = names.iter().map(|x| x).collect();
+        let result1 = find_tags_in_args(&test_args1, &s);
 
         assert_eq!(result1, expected1);
     }

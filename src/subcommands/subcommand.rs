@@ -1,5 +1,6 @@
 use crate::argparse::ParsedArgs;
 use crate::config::configmodels::ConfigFile;
+use crate::subcommands::status;
 use clap::{App, ArgMatches};
 
 pub struct MrtSubcommand {
@@ -10,4 +11,8 @@ pub struct MrtSubcommand {
 
 pub trait SubCmd {
     fn get() -> MrtSubcommand;
+}
+
+pub fn get_subcommands() -> Vec<MrtSubcommand> {
+    vec![status::get()]
 }

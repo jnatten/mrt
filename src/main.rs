@@ -9,6 +9,7 @@ const APP_NAME: &str = "Multi Repo Tool";
 const APP_SHORT_NAME: &str = "mrt";
 const APP_VERSION: &str = "0.0.1";
 
+use crate::subcommands::subcommand;
 use crate::subcommands::subcommand::MrtSubcommand;
 use argparse::args::*;
 use clap::Arg;
@@ -17,7 +18,6 @@ use config::configmodels::ConfigFile;
 use config::loader::get_config_path;
 use std::process::exit;
 use std::result::Result;
-use subcommands::status;
 
 fn help_text() -> String {
     format!(
@@ -62,11 +62,8 @@ fn help_text() -> String {
 }
 
 fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
-    // When adding new subcommands remember to update SUBCOMMAND_NAMES in argparse.rs
-
-    let subcmds: Vec<MrtSubcommand> = vec![status::get()];
-
-    let parsed_arguments = argparse::parse_arguments();
+    let subcmds: Vec<MrtSubcommand> = subcommand::get_subcommands();
+    let parsed_arguments = argparse::parse_arguments(&subcmds);
 
     let args = clap::App::new(APP_NAME)
         .version(APP_VERSION)
