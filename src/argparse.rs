@@ -1,11 +1,8 @@
-use super::config;
 use super::config::configmodels::*;
 use crate::mrt_errors::MrtError;
 use crate::subcommands::subcommand::MrtSubcommand;
 use args::*;
-use clap::{ArgMatches, Values};
-use std::env;
-use std::io::Result;
+use clap::ArgMatches;
 use std::process::exit;
 
 #[derive(Debug, PartialOrd, PartialEq)]
@@ -87,73 +84,24 @@ pub fn handle_args_to_self(
     parsed_arguments: &ParsedArgs,
     config: ConfigFile,
 ) -> std::result::Result<ConfigFile, MrtError> {
-    let config_with_added = match args.values_of(ADD_TAG_ARG) {
-        Some(tags) => add_tag_to_current_dir(tags, config),
-        None => Ok(config),
-    };
-
-    let config_with_removed =
-        config_with_added.and_then(|conf| match args.values_of(DEL_TAG_ARG) {
-            Some(tags) => remove_tag_from_current_dir(tags, conf),
-            None => Ok(conf),
-        });
-
-    let updated_config = match config_with_removed {
-        Ok(conf) => {
-            if args.is_present(LIST_TAGS_ARG) {
-                println!("Config Version: {}", conf.version);
-                for (tag_name, tag) in &conf.tags {
-                    println!("{}:", tag_name);
-                    for path in &tag.paths {
-                        println!("\t{}", path);
-                    }
-                }
+    if args.is_present(LIST_TAGS_ARG) {
+        println!("Config Version: {}", &config.version);
+        for (tag_name, tag) in &config.tags {
+            println!("{}:", tag_name);
+            for path in &tag.paths {
+                println!("\t{}", path);
             }
-            Ok(conf)
         }
-        Err(err) => Err(MrtError::from(err)),
-    };
+    }
 
-    match args.subcommand_name() {
-        Some(subcmd) => {
+    match args.subcommand() {
+        (subcmd, Some(matched)) => {
             let found_cmd = subcommands.iter().find(|cmd| cmd.name == subcmd);
-            let successful_config = updated_config?;
-            found_cmd
-                .map(|found| (found.run_subcommand)(args, parsed_arguments, successful_config));
+            found_cmd.map(|found| (found.run_subcommand)(matched, parsed_arguments, config));
             exit(0)
         }
-        _ => updated_config,
+        _ => Ok(config),
     }
-}
-
-fn add_tag_to_current_dir(tags: Values, mut config: ConfigFile) -> Result<ConfigFile> {
-    for tag in tags {
-        let current_path = env::current_dir()?;
-        let cp = String::from(current_path.to_str().unwrap_or(""));
-
-        let inserted_tag = config
-            .tags
-            .entry(tag.to_string())
-            .or_insert(Tag { paths: vec![] });
-        inserted_tag.paths.push(cp);
-        inserted_tag.paths.sort();
-        inserted_tag.paths.dedup();
-    }
-    config::loader::save_config(config)
-}
-
-fn remove_tag_from_current_dir(tags: Values, mut config: ConfigFile) -> Result<ConfigFile> {
-    for tag in tags {
-        let current_path = env::current_dir()?;
-        let cp = String::from(current_path.to_str().unwrap_or(""));
-        let tag_to_remove_path_from = config.tags.get_mut(tag);
-
-        match tag_to_remove_path_from {
-            Some(tag) => tag.paths.retain(|path| *path != cp),
-            _ => println!("Didn't exist as tag /shrug"),
-        }
-    }
-    config::loader::save_config(config)
 }
 
 #[cfg(test)]

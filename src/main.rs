@@ -44,9 +44,9 @@ fn help_text() -> String {
     {}
     ",
         "# Tag current directory with tag `backend`".bright_black(),
-        "$ mrt -a=backend",
+        "$ mrt config -a backend",
         "# Remove tag `backend` from current directory".bright_black(),
-        "$ mrt -d=backend",
+        "$ mrt config -d backend",
         "# List tagged directories".bright_black(),
         "$ mrt -l",
         "# Execute command in all directories tagged with `backend`".bright_black(),
@@ -69,22 +69,6 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
         .version(APP_VERSION)
         .usage(format!("{} [FLAGS] [OPTIONS] [+tag ..] [--] [command]", APP_SHORT_NAME).as_ref())
         .after_help(help_text().as_ref())
-        .arg(
-            Arg::with_name(ADD_TAG_ARG)
-                .short("a")
-                .long(ADD_TAG_ARG)
-                .value_name("TAG_NAME")
-                .multiple(true)
-                .help(format!("Adds the current directory with specified {}tag", TAG_PREFIX).as_ref())
-        )
-        .arg(
-            Arg::with_name(DEL_TAG_ARG)
-                .short("d")
-                .long(DEL_TAG_ARG)
-                .value_name("TAG_NAME")
-                .multiple(true)
-                .help(format!("Deletes the current directory with specified {}tag", TAG_PREFIX).as_ref())
-        )
         .arg(
             Arg::with_name(LIST_TAGS_ARG)
                 .short("l")
