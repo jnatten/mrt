@@ -69,6 +69,12 @@ EXAMPLES:
     # List status of all directories tagged with `backend`
     $ mrt +backend status
 
+    # Removes the `backend` tag entirely, leaving the directories intact
+    $ mrt config -D backend
+
+    # Removes all tags from current directory
+    $ mrt config -r
+    
 ```
 
 ### Why?
