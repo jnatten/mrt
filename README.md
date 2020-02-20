@@ -26,13 +26,13 @@ Right now there aren't any releases, but you can compile the code yourself with 
 
 ### Usage
 ```
-$ mrt -h
 Multi Repo Tool 0.0.1
 
 USAGE:
-    mrt [FLAGS] [OPTIONS] [+tag ..] [--] [command]
+    mrt [FLAGS] [+tag ..] [--] [command]
 
 FLAGS:
+    -b, --bash                 Will make command be executed in the context of a shell. IE: `bash -c '<command>'`
     -c, --continuous-output    Will make output from commands executed in parallel with --parallel argument print to
                                terminal before every command has been executed.
     -h, --help                 Prints help information
@@ -42,20 +42,17 @@ FLAGS:
                                unless --continuous-output specified.
     -V, --version              Prints version information
 
-OPTIONS:
-    -a, --add-tag <TAG_NAME>...    Adds the current directory with specified +tag
-    -d, --del-tag <TAG_NAME>...    Deletes the current directory with specified +tag
-
 SUBCOMMANDS:
+    config    Subcommand to add and remove tags, generally configure mrt itself
     help      Prints this message or the help of the given subcommand(s)
     status    Status of directories with specified tags
 
 EXAMPLES:
     # Tag current directory with tag `backend`
-    $ mrt -a backend
+    $ mrt config -a backend
 
     # Remove tag `backend` from current directory
-    $ mrt -d backend
+    $ mrt config -d backend
 
     # List tagged directories
     $ mrt -l
