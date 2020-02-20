@@ -9,10 +9,6 @@ pub struct MrtSubcommand {
     pub doc: App<'static, 'static>,
 }
 
-pub trait SubCmd {
-    fn get() -> MrtSubcommand;
-}
-
 pub fn get_subcommands() -> Vec<MrtSubcommand> {
     vec![status::get(), config::get()]
 }
