@@ -67,7 +67,7 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
 
     let args = clap::App::new(APP_NAME)
         .version(APP_VERSION)
-        .usage(format!("{} [FLAGS] [OPTIONS] [+tag ..] [--] [command]", APP_SHORT_NAME).as_ref())
+        .usage(format!("{} [FLAGS] [+tag ..] [--] [command]", APP_SHORT_NAME).as_ref())
         .after_help(help_text().as_ref())
         .arg(
             Arg::with_name(LIST_TAGS_ARG)
