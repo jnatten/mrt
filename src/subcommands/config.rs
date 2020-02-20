@@ -18,7 +18,7 @@ pub fn get() -> MrtSubcommand {
                     .long("add-tag")
                     .value_name("TAG_NAME")
                     .multiple(true)
-                    .help("Adds the current directory with specified tag"),
+                    .help("Tags the current directory with the specified tag"),
             )
             .arg(
                 Arg::with_name("del-tag")
@@ -26,7 +26,14 @@ pub fn get() -> MrtSubcommand {
                     .long("del-tag")
                     .value_name("TAG_NAME")
                     .multiple(true)
-                    .help("Deletes the current directory with specified tag"),
+                    .help("Untags the current directory from the specified tag"),
+            )
+            .arg(
+                Arg::with_name("del-current")
+                    .short("r")
+                    .long("del-current")
+                    .multiple(false)
+                    .help("Untags the current directory from all tags"),
             )
             .arg(
                 Arg::with_name("del-entire-tag")
@@ -34,7 +41,7 @@ pub fn get() -> MrtSubcommand {
                     .long("del-entire-tag")
                     .value_name("TAG_NAME")
                     .multiple(true)
-                    .help("Deletes the tag for ALL directories"),
+                    .help("Untags all directories of the specified tag and removes it entirely"),
             ),
     }
 }
@@ -50,12 +57,41 @@ fn config(args: &ArgMatches, _parsed_args: &ParsedArgs, config: ConfigFile) -> (
         None => Ok(conf),
     });
 
-    let _after_del_entire = after_del_tag.and_then(|conf| match args.values_of("del-entire-tag") {
+    let after_del_entire = after_del_tag.and_then(|conf| match args.values_of("del-entire-tag") {
         Some(tags) => delete_entire_tag(tags, conf),
         None => Ok(conf),
     });
 
+    let _after_del_current = after_del_entire.and_then(|conf| {
+        if args.is_present("del-current") {
+            del_current_dir(conf)
+        } else {
+            Ok(conf)
+        }
+    });
+
     ()
+}
+
+fn del_current_dir(mut config: ConfigFile) -> Result<ConfigFile> {
+    let current_path = env::current_dir()?;
+    let cp = String::from(current_path.to_str().unwrap_or(""));
+
+    let keys_to_iterate: Vec<String> = config.tags.keys().map(|x| x.clone()).collect();
+
+    for tag_name in keys_to_iterate {
+        match config.tags.get_mut(&tag_name) {
+            Some(t) => {
+                t.paths.retain(|path| *path != cp);
+                if t.paths.is_empty() {
+                    config.tags.remove(&tag_name);
+                };
+            }
+            _ => (),
+        }
+    }
+
+    config::loader::save_config(config)
 }
 
 fn delete_entire_tag(tags: Values, mut config: ConfigFile) -> Result<ConfigFile> {
