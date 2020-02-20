@@ -79,10 +79,12 @@ I felt the need to reduce the overhead of maintaining several repositories with 
 Also I think rust is an interesting language which I want to learn more about.
 
 ### Development
-
+##### Useful commands
 - **Compile**: `cargo build` 
 - **Compile + Run**: `cargo run -- -h` 
 - **Run tests**: `cargo test`
+##### Subcommands
+Subcommands _should_ be relatively easy to implement. See the subcommands [README](src/subcommands/README.md) for more info.
 
 ### Alternatives
 
