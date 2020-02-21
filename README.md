@@ -77,6 +77,36 @@ EXAMPLES:
     
 ```
 
+### Configuration
+Configuring tags are mostly done with the `mrt config` command.
+See examples at `mrt -h` or `mrt config -h` for more help.
+
+The config file is by default located at `<HOME>/.mrtconfig.json` and is a json file.
+The fastest way to add multiple directories under multiple tags and such is probably editing this file by hand.
+The format is like this:
+```
+{
+  "version": "0.0.1",
+  "tags": {
+    "tag1": {
+      "paths": [
+        "/home/user/dir1",
+        "/home/user/dir2",
+        ...
+      ]
+    },
+    "tag2": {
+      "paths": [
+        "/home/user/dir2",
+        "/home/user/dir3",
+        ...
+      ]
+    },
+    ...
+  }
+}
+```
+
 ### Why?
 
 I work on many repositories with similar code in some sort of a microservice environment. 
