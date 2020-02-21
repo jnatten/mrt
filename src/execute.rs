@@ -27,7 +27,12 @@ pub fn get_all_paths(tags: &[String], config: &ConfigFile) -> Vec<String> {
     } else {
         tags.iter()
             .flat_map(|t| {
-                let tag_without_prefix: &str = t.as_str()[1..].as_ref(); // TODO: slice this in a better way, this may panic!!!
+                let tag_without_prefix = if t.is_empty() {
+                    eprintln!("Got tag without content, this is probably a bug");
+                    ""
+                } else {
+                    &t[1..]
+                };
                 match config.tags.get(tag_without_prefix) {
                     Some(tag) => tag.paths.clone(),
                     None => {
