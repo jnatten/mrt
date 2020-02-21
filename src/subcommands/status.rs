@@ -24,7 +24,7 @@ fn status(parsed_arguments: &ParsedArgs, config: ConfigFile) {
     }
 }
 
-fn run_status(path: &String) -> String {
+fn run_status(path: &str) -> String {
     let mut cmd = Command::new("git");
 
     cmd.args(&["-c", "color.ui=always"])
@@ -37,7 +37,7 @@ fn run_status(path: &String) -> String {
     }
 }
 
-fn format_output(path: &String, out: &Vec<u8>) -> String {
+fn format_output(path: &str, out: &[u8]) -> String {
     let output_string = String::from_utf8_lossy(out).to_string();
     let lines: Vec<String> = output_string.split('\n').map(String::from).collect();
 
@@ -62,22 +62,21 @@ fn get_spaces_with_maxlen(max_len: i32, string_length: usize) -> String {
     " ".repeat(y)
 }
 
-fn get_dirtyness(lines: &Vec<String>) -> String {
-    let modified_files: Vec<String> = lines
-        .clone()
-        .into_iter()
+fn get_dirtyness(lines: &[String]) -> String {
+    let modified_files: Vec<&String> = lines
+        .iter()
         .filter(|l| !(l.starts_with("## ") || l.is_empty()))
         .collect();
 
-    if modified_files.len() > 0 {
+    if !modified_files.is_empty() {
         let text = format!("{} modified", modified_files.len());
-        String::from(format!("{}", text.red()))
+        format!("{}", text.red())
     } else {
-        String::from(format!("{}", "Clean".green()))
+        format!("{}", "Clean".green())
     }
 }
 
-fn get_colored_branch(lines: &Vec<String>) -> ColoredString {
+fn get_colored_branch(lines: &[String]) -> ColoredString {
     get_branch(lines)
         .map(|s| {
             // TODO: Consider checking what is default branch rather than assume master
@@ -87,10 +86,10 @@ fn get_colored_branch(lines: &Vec<String>) -> ColoredString {
                 s.normal()
             }
         })
-        .unwrap_or("<UNKNOWN>".yellow())
+        .unwrap_or_else(|| "<UNKNOWN>".yellow())
 }
 
-fn get_branch(lines: &Vec<String>) -> Option<String> {
+fn get_branch(lines: &[String]) -> Option<String> {
     lines.first().map(|branch_line| {
         let mut split: Vec<String> = branch_line.split("## ").map(String::from).collect();
         if split.len() > 1 {
@@ -105,7 +104,7 @@ fn get_branch(lines: &Vec<String>) -> Option<String> {
 
         // If no remote
         if middle_idx == 0 {
-            dotsplit.pop().unwrap_or(String::new())
+            dotsplit.pop().unwrap_or_default()
         } else {
             while dotsplit.len() > middle_idx {
                 dotsplit.pop();
@@ -115,11 +114,11 @@ fn get_branch(lines: &Vec<String>) -> Option<String> {
     })
 }
 
-fn get_behindness(lines: &Vec<String>) -> Option<String> {
+fn get_behindness(lines: &[String]) -> Option<String> {
     lines
         .first()
         .map(|branch_line| {
-            if branch_line.ends_with("]") {
+            if branch_line.ends_with(']') {
                 let mut split: Vec<String> = branch_line.split(" [").map(String::from).collect();
                 split.pop().map(|l| format!("[{}", l))
             } else {
@@ -129,10 +128,10 @@ fn get_behindness(lines: &Vec<String>) -> Option<String> {
         .flatten()
 }
 
-fn get_colored_behindness(lines: &Vec<String>) -> String {
+fn get_colored_behindness(lines: &[String]) -> String {
     get_behindness(lines)
         .map(|b| format!(" {}", b.yellow()))
-        .unwrap_or(String::new())
+        .unwrap_or_default()
 }
 
 #[cfg(test)]

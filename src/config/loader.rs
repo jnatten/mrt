@@ -9,27 +9,27 @@ use std::path::Path;
 
 const CONFIG_ENV_NAME: &str = "MRT_CONFIG_PATH";
 
-pub fn load_config(path: &String) -> Result<ConfigFile> {
+pub fn load_config(path: &str) -> Result<ConfigFile> {
     let config_string = read_file_to_string(path)?;
     let data: ConfigFile = serde_json::from_str(&config_string)?;
     Ok(data)
 }
 
 pub fn save_config(config: ConfigFile) -> Result<ConfigFile> {
-    let config_path = get_config_path().unwrap_or(String::from(".mrtconfig.json"));
+    let config_path = get_config_path().unwrap_or_else(|| String::from(".mrtconfig.json"));
     save_config_at(&config_path, &config).map(|()| config)
 }
 
-fn save_config_at(path: &String, config_struct: &ConfigFile) -> Result<()> {
+fn save_config_at(path: &str, config_struct: &ConfigFile) -> Result<()> {
     let data = serde_json::to_string_pretty(config_struct)?;
 
-    let mut file = File::create(path.as_str())?;
+    let mut file = File::create(path)?;
     file.write_all(data.as_bytes())?;
 
     Ok(())
 }
 
-pub fn create_new_empty_config(path: &String) -> Result<ConfigFile> {
+pub fn create_new_empty_config(path: &str) -> Result<ConfigFile> {
     let new_config = ConfigFile {
         version: String::from(APP_VERSION),
         tags: HashMap::new(),
@@ -38,8 +38,8 @@ pub fn create_new_empty_config(path: &String) -> Result<ConfigFile> {
     save_config_at(path, &new_config).map(|()| new_config)
 }
 
-fn read_file_to_string(path: &String) -> Result<String> {
-    let mut file = File::open(path.as_str())?;
+fn read_file_to_string(path: &str) -> Result<String> {
+    let mut file = File::open(path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
 
@@ -47,7 +47,7 @@ fn read_file_to_string(path: &String) -> Result<String> {
 }
 
 pub fn get_config_path() -> Option<String> {
-    let config_path = match std::env::var(CONFIG_ENV_NAME) {
+    match std::env::var(CONFIG_ENV_NAME) {
         Ok(path) => Some(path),
         _ => {
             let config_dir = dirs::home_dir()?;
@@ -61,9 +61,7 @@ pub fn get_config_path() -> Option<String> {
                 }
             }
         }
-    };
-
-    config_path
+    }
 }
 
 #[cfg(test)]

@@ -30,49 +30,48 @@ pub mod args {
     pub const SHELL_EXECUTION_ARG: &str = "bash";
 }
 
-fn find_tags_in_args(args: &Vec<String>, subcommand_names: &Vec<&String>) -> ParsedArgs {
-    let any_tags = args.iter().find(|t| t.starts_with(TAG_PREFIX)).is_some();
+fn find_tags_in_args(args: &[String], subcommand_names: &[&String]) -> ParsedArgs {
+    let any_tags = args.iter().any(|t| t.starts_with(TAG_PREFIX));
 
     let mut has_encountered_non_subcommand = false;
     let mut has_encountered_subcommand = false;
     let mut double_dash = false;
 
-    args.into_iter()
-        .fold(ParsedArgs::initial(), |mut acc, arg| {
-            if subcommand_names.contains(&arg) && !has_encountered_non_subcommand {
-                has_encountered_subcommand = true;
+    args.iter().fold(ParsedArgs::initial(), |mut acc, arg| {
+        if subcommand_names.contains(&arg) && !has_encountered_non_subcommand {
+            has_encountered_subcommand = true;
+        }
+
+        let arg_is_subcmd = subcommand_names.contains(&arg) || arg.starts_with('-');
+
+        let is_first_arg = acc != ParsedArgs::initial();
+        let found_tags = !acc.tags.is_empty();
+
+        let found_tags_or_no_tags =
+            (found_tags || (!any_tags && is_first_arg)) && !has_encountered_subcommand;
+        let isnt_subcmd = !arg_is_subcmd || has_encountered_non_subcommand;
+
+        let is_tag_before_cmd =
+            arg.starts_with(TAG_PREFIX) && (acc.after_tags.is_empty() && !double_dash);
+
+        match arg {
+            a if a == "--" => double_dash = true,
+            a if is_tag_before_cmd => acc.tags.push(a.clone()),
+            a if (found_tags_or_no_tags && isnt_subcmd) || double_dash => {
+                has_encountered_non_subcommand = true;
+                acc.after_tags.push(a.clone())
             }
-
-            let arg_is_subcmd = subcommand_names.contains(&arg) || arg.starts_with("-");
-
-            let is_first_arg = acc != ParsedArgs::initial();
-            let found_tags = !acc.tags.is_empty();
-
-            let found_tags_or_no_tags =
-                (found_tags || (!any_tags && is_first_arg)) && !has_encountered_subcommand;
-            let isnt_subcmd = !arg_is_subcmd || has_encountered_non_subcommand;
-
-            let is_tag_before_cmd =
-                arg.starts_with(TAG_PREFIX) && (acc.after_tags.is_empty() && !double_dash);
-
-            match arg {
-                a if a == "--" => double_dash = true,
-                a if is_tag_before_cmd => acc.tags.push(a.clone()),
-                a if (found_tags_or_no_tags && isnt_subcmd) || double_dash => {
-                    has_encountered_non_subcommand = true;
-                    acc.after_tags.push(a.clone())
-                }
-                a => acc.before_tags.push(a.clone()),
-            };
-            acc
-        })
+            a => acc.before_tags.push(a.clone()),
+        };
+        acc
+    })
 }
 
-pub fn parse_arguments(subcommands: &Vec<MrtSubcommand>) -> ParsedArgs {
+pub fn parse_arguments(subcommands: &[MrtSubcommand]) -> ParsedArgs {
     let subcommand_names: Vec<&String> = subcommands.iter().map(|x| &x.name).collect();
 
     let args = std::env::args();
-    let args_vec = args.collect();
+    let args_vec: Vec<String> = args.collect();
     find_tags_in_args(&args_vec, &subcommand_names)
 }
 
@@ -95,7 +94,9 @@ pub fn handle_args_to_self(
     match args.subcommand() {
         (subcmd, Some(matched)) => {
             let found_cmd = subcommands.iter().find(|cmd| cmd.name == subcmd);
-            found_cmd.map(|found| (found.run_subcommand)(matched, parsed_arguments, config));
+            if let Some(found) = found_cmd {
+                (found.run_subcommand)(matched, parsed_arguments, config)
+            };
             exit(0)
         }
         _ => Ok(config),

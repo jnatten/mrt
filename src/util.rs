@@ -1,11 +1,7 @@
 use colored::Colorize;
 use std::path::{Path, PathBuf};
 
-fn format_path_with_homedir(
-    path: &String,
-    home_dir: Option<PathBuf>,
-    sep: char,
-) -> (String, String) {
+fn format_path_with_homedir(path: &str, home_dir: Option<PathBuf>, sep: char) -> (String, String) {
     let as_path = Path::new(path);
     let base_name = as_path
         .file_name()
@@ -26,7 +22,7 @@ fn format_path_with_homedir(
     (prefix, base_name)
 }
 
-pub fn format_path(path: &String) -> String {
+pub fn format_path(path: &str) -> String {
     let home_dir = dirs::home_dir();
     let (prefix, basename) = format_path_with_homedir(path, home_dir, std::path::MAIN_SEPARATOR);
     format!("{}{}", prefix.dimmed(), basename.normal())

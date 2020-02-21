@@ -15,12 +15,12 @@ struct ExecutionOutput {
     stderr: String,
 }
 
-pub fn get_all_paths(tags: &Vec<String>, config: &ConfigFile) -> Vec<String> {
+pub fn get_all_paths(tags: &[String], config: &ConfigFile) -> Vec<String> {
     let mut all_paths: Vec<String> = if tags.is_empty() {
         let nested_paths: Vec<Vec<String>> = config
             .tags
             .iter()
-            .map(|(_tag_name, tag)| tag.paths.iter().cloned().collect())
+            .map(|(_tag_name, tag)| tag.paths.to_vec())
             .collect();
 
         nested_paths.into_iter().flatten().collect()
@@ -44,8 +44,8 @@ pub fn get_all_paths(tags: &Vec<String>, config: &ConfigFile) -> Vec<String> {
     all_paths
 }
 
-fn print_result(path: &String, output: &ExecutionOutput) -> () {
-    let headline = format!("\nin {}", path.as_str());
+fn print_result(path: &str, output: &ExecutionOutput) {
+    let headline = format!("\nin {}", path);
     if output.exit_code == 0 {
         println!("{}", headline.bright_black());
     } else {
@@ -53,10 +53,10 @@ fn print_result(path: &String, output: &ExecutionOutput) -> () {
         println!("{} ({})", headline.bright_black(), code.red());
     }
 
-    if output.stdout.len() > 0 {
+    if !output.stdout.is_empty() {
         println!("\n{}", output.stdout);
     }
-    if output.stderr.len() > 0 {
+    if !output.stderr.is_empty() {
         eprintln!("\n{}", output.stderr.red());
     }
 }
@@ -91,9 +91,8 @@ pub fn exec(
 
             if !should_print_instantly {
                 for (path, output) in execute_output {
-                    match output {
-                        Ok(res) => print_result(&path, &res),
-                        _ => (),
+                    if let Ok(res) = output {
+                        print_result(&path, &res)
                     }
                 }
             }
@@ -103,14 +102,17 @@ pub fn exec(
     }
 }
 
+type ExecuteResult = Result<ExecutionOutput, MrtError>;
+type ExecuteResultForAllPaths = Result<Vec<(String, ExecuteResult)>, MrtError>;
+
 fn exec_all(
     all_paths: Vec<String>,
-    prog: &String,
+    prog: &str,
     args: &[String],
     in_parallel: bool,
     should_print_instantly: bool,
     execute_in_shell: bool,
-) -> Result<Vec<(String, Result<ExecutionOutput, MrtError>)>, MrtError> {
+) -> ExecuteResultForAllPaths {
     let execute_func = |path: &String| {
         (
             path.to_string(),
@@ -141,7 +143,7 @@ fn exec_at_path(
     args: &[String],
     print: bool,
     execute_in_shell: bool,
-) -> Result<ExecutionOutput, MrtError> {
+) -> ExecuteResult {
     let color_args = get_color_args(&command);
 
     let mut cmd = if execute_in_shell {
@@ -201,7 +203,7 @@ fn exec_at_path(
     Ok(execution)
 }
 
-fn get_color_args(cmd_name: &String) -> Vec<&str> {
+fn get_color_args(cmd_name: &str) -> Vec<&str> {
     // TODO: Is it possible/easy to simulate a tty here so auto coloring for most apps could work?
     if cmd_name == "git" {
         vec!["-c", "color.ui=always"]

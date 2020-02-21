@@ -46,7 +46,7 @@ pub fn get() -> MrtSubcommand {
     }
 }
 
-fn config(args: &ArgMatches, _parsed_args: &ParsedArgs, config: ConfigFile) -> () {
+fn config(args: &ArgMatches, _parsed_args: &ParsedArgs, config: ConfigFile) {
     let after_add_tag = match args.values_of("add-tag") {
         Some(tags) => add_tag_to_current_dir(tags, config),
         None => Ok(config),
@@ -69,25 +69,20 @@ fn config(args: &ArgMatches, _parsed_args: &ParsedArgs, config: ConfigFile) -> (
             Ok(conf)
         }
     });
-
-    ()
 }
 
 fn del_current_dir(mut config: ConfigFile) -> Result<ConfigFile> {
     let current_path = env::current_dir()?;
     let cp = String::from(current_path.to_str().unwrap_or(""));
 
-    let keys_to_iterate: Vec<String> = config.tags.keys().map(|x| x.clone()).collect();
+    let keys_to_iterate: Vec<String> = config.tags.keys().cloned().collect();
 
     for tag_name in keys_to_iterate {
-        match config.tags.get_mut(&tag_name) {
-            Some(t) => {
-                t.paths.retain(|path| *path != cp);
-                if t.paths.is_empty() {
-                    config.tags.remove(&tag_name);
-                };
-            }
-            _ => (),
+        if let Some(t) = config.tags.get_mut(&tag_name) {
+            t.paths.retain(|path| *path != cp);
+            if t.paths.is_empty() {
+                config.tags.remove(&tag_name);
+            };
         }
     }
 

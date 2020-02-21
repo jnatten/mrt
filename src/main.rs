@@ -115,7 +115,7 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
 }
 
 fn main() {
-    let config_path = get_config_path().unwrap_or(String::from(".mrtconfig.json"));
+    let config_path = get_config_path().unwrap_or_else(|| String::from(".mrtconfig.json"));
     let config_to_use = match config::loader::load_config(&config_path) {
         Ok(config) => config,
         _ => match config::loader::create_new_empty_config(&config_path) {
