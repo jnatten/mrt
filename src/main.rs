@@ -108,6 +108,13 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
                 .multiple(false)
                 .help("Will make command be executed in the context of a shell. IE: `bash -c '<command>'`")
         )
+        .arg(
+            Arg::with_name(PANIC_ON_NON_ZERO_ARG)
+                .short("P")
+                .long(PANIC_ON_NON_ZERO_ARG)
+                .multiple(false)
+                .help("Makes mrt quit if it encounters a non-zero exit code.")
+        )
         .subcommands(subcmds.iter().map(|cmd| cmd.doc.to_owned()))
         .get_matches_from(&parsed_arguments.before_tags);
 

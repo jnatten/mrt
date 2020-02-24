@@ -7,7 +7,7 @@ use colored::Colorize;
 use rayon::prelude::*;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
+use std::process::{Command, Stdio, exit};
 use std::result::Result;
 
 struct ExecutionOutput {
@@ -85,6 +85,7 @@ pub fn exec(
                 || clap_args.is_present(CONTINUOUS_OUTPUT_ARG);
 
             let execute_in_shell = clap_args.is_present(SHELL_EXECUTION_ARG);
+            let panic_on_nonzero = clap_args.is_present(PANIC_ON_NON_ZERO_ARG);
 
             let execute_output = exec_all(
                 all_paths,
@@ -93,6 +94,7 @@ pub fn exec(
                 clap_args.is_present(PARALLEL_TAG),
                 should_print_instantly,
                 execute_in_shell,
+                panic_on_nonzero,
             )?;
 
             if !should_print_instantly {
@@ -118,6 +120,7 @@ fn exec_all(
     in_parallel: bool,
     should_print_instantly: bool,
     execute_in_shell: bool,
+    panic_on_nonzero_exitcode: bool,
 ) -> ExecuteResultForAllPaths {
     let execute_func = |path: &PathBuf| {
         let path_as_string = String::from(path.to_str().unwrap_or("<missing>"));
@@ -129,6 +132,7 @@ fn exec_all(
                 args,
                 should_print_instantly,
                 execute_in_shell,
+                panic_on_nonzero_exitcode,
             ),
         )
     };
@@ -150,28 +154,49 @@ fn exec_at_path(
     args: &[String],
     print: bool,
     execute_in_shell: bool,
+    panic_on_nonzero_exitcode: bool,
 ) -> ExecuteResult {
     let color_args = get_color_args(&command);
 
     let mut cmd = if execute_in_shell {
         let bash_command_arg = format!("{} {} {}", &command, color_args.join(" "), args.join(" "));
 
-        let mut cmd = Command::new("bash");
-        cmd.args(&["-c", bash_command_arg.as_str()]);
-        cmd
+        let mut bash = Command::new("bash");
+        bash.args(&["-c", bash_command_arg.as_str()]);
+        bash
     } else {
-        let mut cmd = Command::new(&command);
-        cmd.args(color_args);
-        cmd.args(args);
-        cmd
+        let mut prog = Command::new(&command);
+        prog.args(color_args);
+        prog.args(args);
+        prog
     };
 
     cmd.current_dir(path);
 
+    let execution = if print {
+        exec_with_connected_outputs(cmd, path)?
+    } else {
+        exec_with_captured_output(cmd)?
+    };
+
+    if execution.exit_code != 0 && panic_on_nonzero_exitcode {
+        eprintln!("\n\n{}", "Encountered non-zero exit code, quitting...".red());
+        exit(1)
+    }
+
+    Ok(execution)
+}
+
+/// Executes command and captures output in a `ExecutionOuput` struct if `Ok`
+/// Useful for when we want to run commands in parallel and we don't want to print output immediately
+fn exec_with_captured_output(mut cmd: Command) -> ExecuteResult {
     let mut stdout_l: Vec<String> = Vec::new();
     let mut stderr_l: Vec<String> = Vec::new();
 
-    let mut child = cmd.stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
+    cmd.stdout(Stdio::piped());
+    cmd.stderr(Stdio::piped());
+
+    let mut child = cmd.spawn()?;
     let stdout = child.stdout.as_mut().unwrap();
     let stdout_reader = BufReader::new(stdout);
     let stdout_lines = stdout_reader.lines();
@@ -180,34 +205,41 @@ fn exec_at_path(
     let stderr_reader = BufReader::new(stderr);
     let stderr_lines = stderr_reader.lines();
 
-    let headline = format!("\n\nin {}", path.to_str().unwrap_or("<missing>"));
-    if print {
-        println!("{}\n", headline.bright_black());
-    }
-
     for line in stdout_lines {
         let l = line?;
-        if print {
-            println!("{}", &l);
-        }
         stdout_l.push(l);
     }
 
     for line in stderr_lines {
         let l = line?;
-        if print {
-            println!("{}", &l);
-        }
         stderr_l.push(l);
     }
     let code = child.wait()?;
 
-    let execution = ExecutionOutput {
+    let exec_output = ExecutionOutput {
         exit_code: code.code().unwrap_or(-1),
         stdout: stdout_l.join("\n"),
         stderr: stderr_l.join("\n"),
     };
-    Ok(execution)
+
+    Ok(exec_output)
+}
+
+/// Executes the command with the outputs attached.
+/// This is useful when we want the subprocess to be able to control their own outputs completely
+/// Example when using vim as a subcommand
+fn exec_with_connected_outputs(mut cmd: Command, path: &PathBuf) -> ExecuteResult {
+    let headline = format!("\n\nin {}", path.to_str().unwrap_or("<missing>"));
+    println!("{}\n", headline.bright_black());
+
+    let mut child = cmd.spawn()?;
+    let waited = child.wait()?;
+    let output = ExecutionOutput {
+        exit_code: waited.code().unwrap_or(-1),
+        stdout: String::default(),
+        stderr: String::default(),
+    };
+    Ok(output)
 }
 
 fn get_color_args(cmd_name: &str) -> Vec<&str> {
