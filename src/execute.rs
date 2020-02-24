@@ -2,12 +2,13 @@ use super::argparse::ParsedArgs;
 use super::config::configmodels::ConfigFile;
 use super::mrt_errors::MrtError;
 use crate::argparse::args::*;
+use crate::util;
 use clap::ArgMatches;
 use colored::Colorize;
 use rayon::prelude::*;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
-use std::process::{Command, Stdio, exit};
+use std::process::{exit, Command, Stdio};
 use std::result::Result;
 
 struct ExecutionOutput {
@@ -50,8 +51,18 @@ pub fn get_all_paths(tags: &[String], config: &ConfigFile) -> Vec<PathBuf> {
     all_paths
 }
 
+fn get_headline(path: &str) -> String {
+    let (prefix, basename) = util::split_on_basename(path);
+    format!(
+        "\n\n{} {}{}",
+        "in".bright_black().dimmed(),
+        prefix.bright_black().dimmed(),
+        basename.bright_black()
+    )
+}
+
 fn print_result(path: &str, output: &ExecutionOutput) {
-    let headline = format!("\nin {}", path);
+    let headline = get_headline(path);
     if output.exit_code == 0 {
         println!("{}", headline.bright_black());
     } else {
@@ -180,7 +191,10 @@ fn exec_at_path(
     };
 
     if execution.exit_code != 0 && panic_on_nonzero_exitcode {
-        eprintln!("\n\n{}", "Encountered non-zero exit code, quitting...".red());
+        eprintln!(
+            "\n\n{}",
+            "Encountered non-zero exit code, quitting...".red()
+        );
         exit(1)
     }
 
@@ -229,8 +243,8 @@ fn exec_with_captured_output(mut cmd: Command) -> ExecuteResult {
 /// This is useful when we want the subprocess to be able to control their own outputs completely
 /// Example when using vim as a subcommand
 fn exec_with_connected_outputs(mut cmd: Command, path: &PathBuf) -> ExecuteResult {
-    let headline = format!("\n\nin {}", path.to_str().unwrap_or("<missing>"));
-    println!("{}\n", headline.bright_black());
+    let headline = get_headline(path.to_str().unwrap_or("<missing>"));
+    println!("{}\n", headline);
 
     let mut child = cmd.spawn()?;
     let waited = child.wait()?;

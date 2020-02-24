@@ -23,9 +23,13 @@ fn format_path_with_homedir(path: &str, home_dir: Option<PathBuf>, sep: char) ->
 }
 
 pub fn format_path(path: &str) -> String {
-    let home_dir = dirs::home_dir();
-    let (prefix, basename) = format_path_with_homedir(path, home_dir, std::path::MAIN_SEPARATOR);
+    let (prefix, basename) = split_on_basename(path);
     format!("{}{}", prefix.dimmed(), basename.normal())
+}
+
+pub fn split_on_basename(path: &str) -> (String, String) {
+    let home_dir = dirs::home_dir();
+    format_path_with_homedir(path, home_dir, std::path::MAIN_SEPARATOR)
 }
 
 #[cfg(test)]
