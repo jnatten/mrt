@@ -98,7 +98,7 @@ pub fn exec(
             if !should_print_instantly {
                 for (path, output) in execute_output {
                     if let Ok(res) = output {
-                        print_result(path.to_str().unwrap_or("<missing>"), &res)
+                        print_result(path.as_ref(), &res)
                     }
                 }
             }
@@ -109,7 +109,7 @@ pub fn exec(
 }
 
 type ExecuteResult = Result<ExecutionOutput, MrtError>;
-type ExecuteResultForAllPaths = Result<Vec<(PathBuf, ExecuteResult)>, MrtError>;
+type ExecuteResultForAllPaths = Result<Vec<(String, ExecuteResult)>, MrtError>;
 
 fn exec_all(
     all_paths: Vec<PathBuf>,
@@ -120,8 +120,9 @@ fn exec_all(
     execute_in_shell: bool,
 ) -> ExecuteResultForAllPaths {
     let execute_func = |path: &PathBuf| {
+        let path_as_string = String::from(path.to_str().unwrap_or("<missing>"));
         (
-            path.clone(), // TODO: Kanskje bare gjøre string conversion her?
+            path_as_string,
             exec_at_path(
                 path,
                 prog.to_string(),
