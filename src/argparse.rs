@@ -31,20 +31,20 @@ pub mod args {
     pub const PANIC_ON_NON_ZERO_ARG: &str = "panic-on-nonzero";
 }
 
+const TAG_ENV_VAR: &str = "MRT_DEFAULT_TAGS";
+
 fn find_tags_in_args(args: &[String], subcommand_names: &[&String]) -> ParsedArgs {
     let any_tags = args.iter().any(|t| t.starts_with(TAG_PREFIX));
-
     let mut has_encountered_non_subcommand = false;
     let mut has_encountered_subcommand = false;
     let mut double_dash = false;
 
-    args.iter().fold(ParsedArgs::initial(), |mut acc, arg| {
+    let mut cli_tags = args.iter().fold(ParsedArgs::initial(), |mut acc, arg| {
         if subcommand_names.contains(&arg) && !has_encountered_non_subcommand {
             has_encountered_subcommand = true;
         }
 
         let arg_is_subcmd = subcommand_names.contains(&arg) || arg.starts_with('-');
-
         let is_first_arg = acc != ParsedArgs::initial();
         let found_tags = !acc.tags.is_empty();
 
@@ -65,7 +65,24 @@ fn find_tags_in_args(args: &[String], subcommand_names: &[&String]) -> ParsedArg
             a => acc.before_tags.push(a.clone()),
         };
         acc
-    })
+    });
+
+    if cli_tags.tags.is_empty() {
+        cli_tags.tags = get_tags_from_env();
+        cli_tags
+    } else {
+        cli_tags
+    }
+}
+
+fn get_tags_from_env() -> Vec<String> {
+    match std::env::var(TAG_ENV_VAR) {
+        Ok(tag_string) => {
+            let split = tag_string.split(',');
+            split.map(|t| format!("+{}", t.trim())).collect()
+        }
+        _ => vec![],
+    }
 }
 
 pub fn parse_arguments(subcommands: &[MrtSubcommand]) -> ParsedArgs {
