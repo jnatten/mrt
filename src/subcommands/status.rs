@@ -20,7 +20,8 @@ fn status(parsed_arguments: &ParsedArgs, config: ConfigFile) {
     let paths = execute::get_all_paths(&parsed_arguments.tags, &config);
 
     for path in paths {
-        println!("{}", run_status(&path));
+        let str_path = path.to_str().unwrap_or("<missing>");
+        println!("{}", run_status(str_path));
     }
 }
 

@@ -4,23 +4,29 @@ use crate::APP_VERSION;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::Result;
-use std::path::Path;
+use std::io::{Error, ErrorKind, Result};
+use std::path::{Path, PathBuf};
 
 const CONFIG_ENV_NAME: &str = "MRT_CONFIG_PATH";
 
-pub fn load_config(path: &str) -> Result<ConfigFile> {
+pub fn load_config(path: &Path) -> Result<ConfigFile> {
     let config_string = read_file_to_string(path)?;
     let data: ConfigFile = serde_json::from_str(&config_string)?;
     Ok(data)
 }
 
 pub fn save_config(config: ConfigFile) -> Result<ConfigFile> {
-    let config_path = get_config_path().unwrap_or_else(|| String::from(".mrtconfig.json"));
-    save_config_at(&config_path, &config).map(|()| config)
+    let config_path = get_config_path();
+    match config_path {
+        Some(path) => save_config_at(path.as_path(), &config).map(|()| config),
+        None => Err(Error::new(
+            ErrorKind::NotFound,
+            "Could not detect correct config path",
+        )),
+    }
 }
 
-fn save_config_at(path: &str, config_struct: &ConfigFile) -> Result<()> {
+fn save_config_at(path: &Path, config_struct: &ConfigFile) -> Result<()> {
     let data = serde_json::to_string_pretty(config_struct)?;
 
     let mut file = File::create(path)?;
@@ -29,7 +35,7 @@ fn save_config_at(path: &str, config_struct: &ConfigFile) -> Result<()> {
     Ok(())
 }
 
-pub fn create_new_empty_config(path: &str) -> Result<ConfigFile> {
+pub fn create_new_empty_config(path: &Path) -> Result<ConfigFile> {
     let new_config = ConfigFile {
         version: String::from(APP_VERSION),
         tags: HashMap::new(),
@@ -38,7 +44,7 @@ pub fn create_new_empty_config(path: &str) -> Result<ConfigFile> {
     save_config_at(path, &new_config).map(|()| new_config)
 }
 
-fn read_file_to_string(path: &str) -> Result<String> {
+fn read_file_to_string(path: &Path) -> Result<String> {
     let mut file = File::open(path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
@@ -46,20 +52,14 @@ fn read_file_to_string(path: &str) -> Result<String> {
     Ok(contents)
 }
 
-pub fn get_config_path() -> Option<String> {
+pub fn get_config_path() -> Option<PathBuf> {
     match std::env::var(CONFIG_ENV_NAME) {
-        Ok(path) => Some(path),
+        Ok(path) => Some(PathBuf::from(path)),
         _ => {
             let config_dir = dirs::home_dir()?;
             let config_filename = Path::new(".mrtconfig.json");
             let combined_path = config_dir.join(config_filename);
-            match combined_path.to_str() {
-                Some(p) => Some(String::from(p)),
-                _ => {
-                    eprintln!("Could not get a valid config path...");
-                    Some(String::from(""))
-                }
-            }
+            Some(combined_path)
         }
     }
 }
@@ -72,10 +72,10 @@ mod test {
     fn test_read_write_config_file() -> Result<()> {
         let dir = tempdir::TempDir::new("mrttest")?;
         let dir_path = dir.path();
-        let test_config_path = dir_path.join("config.json").to_string_lossy().to_string();
+        let test_config_path = dir_path.join("config.json");
 
-        let tag_path1 = dir_path.join("test1").to_string_lossy().to_string();
-        let tag_path2 = dir_path.join("test2").to_string_lossy().to_string();
+        let tag_path1 = dir_path.join("test1");
+        let tag_path2 = dir_path.join("test2");
 
         let tag_to_save = Tag {
             paths: vec![tag_path1, tag_path2],
@@ -90,7 +90,7 @@ mod test {
         };
 
         save_config_at(&test_config_path, &config_to_save)?;
-        let read_config = load_config(&test_config_path)?;
+        let read_config = load_config(test_config_path.as_path())?;
 
         assert_eq!(config_to_save, read_config);
         dir.close()?;

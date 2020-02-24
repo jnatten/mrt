@@ -73,13 +73,12 @@ fn config(args: &ArgMatches, _parsed_args: &ParsedArgs, config: ConfigFile) {
 
 fn del_current_dir(mut config: ConfigFile) -> Result<ConfigFile> {
     let current_path = env::current_dir()?;
-    let cp = String::from(current_path.to_str().unwrap_or(""));
 
     let keys_to_iterate: Vec<String> = config.tags.keys().cloned().collect();
 
     for tag_name in keys_to_iterate {
         if let Some(t) = config.tags.get_mut(&tag_name) {
-            t.paths.retain(|path| *path != cp);
+            t.paths.retain(|path| *path != current_path);
             if t.paths.is_empty() {
                 config.tags.remove(&tag_name);
             };
@@ -100,13 +99,12 @@ fn delete_entire_tag(tags: Values, mut config: ConfigFile) -> Result<ConfigFile>
 fn add_tag_to_current_dir(tags: Values, mut config: ConfigFile) -> Result<ConfigFile> {
     for tag in tags {
         let current_path = env::current_dir()?;
-        let cp = String::from(current_path.to_str().unwrap_or(""));
 
         let inserted_tag = config
             .tags
             .entry(tag.to_string())
             .or_insert(Tag { paths: vec![] });
-        inserted_tag.paths.push(cp);
+        inserted_tag.paths.push(current_path);
         inserted_tag.paths.sort();
         inserted_tag.paths.dedup();
     }
@@ -116,12 +114,11 @@ fn add_tag_to_current_dir(tags: Values, mut config: ConfigFile) -> Result<Config
 fn remove_tag_from_current_dir(tags: Values, mut config: ConfigFile) -> Result<ConfigFile> {
     for tag in tags {
         let current_path = env::current_dir()?;
-        let cp = String::from(current_path.to_str().unwrap_or(""));
         let tag_to_remove_path_from = config.tags.get_mut(tag);
 
         match tag_to_remove_path_from {
             Some(tag_to_mod) => {
-                tag_to_mod.paths.retain(|path| *path != cp);
+                tag_to_mod.paths.retain(|path| *path != current_path);
 
                 if tag_to_mod.paths.is_empty() {
                     config.tags.remove(tag);

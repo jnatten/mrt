@@ -6,6 +6,7 @@ use clap::ArgMatches;
 use colored::Colorize;
 use rayon::prelude::*;
 use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::result::Result;
 
@@ -15,9 +16,9 @@ struct ExecutionOutput {
     stderr: String,
 }
 
-pub fn get_all_paths(tags: &[String], config: &ConfigFile) -> Vec<String> {
-    let mut all_paths: Vec<String> = if tags.is_empty() {
-        let nested_paths: Vec<Vec<String>> = config
+pub fn get_all_paths(tags: &[String], config: &ConfigFile) -> Vec<PathBuf> {
+    let mut all_paths: Vec<PathBuf> = if tags.is_empty() {
+        let nested_paths: Vec<Vec<PathBuf>> = config
             .tags
             .iter()
             .map(|(_tag_name, tag)| tag.paths.to_vec())
@@ -97,7 +98,7 @@ pub fn exec(
             if !should_print_instantly {
                 for (path, output) in execute_output {
                     if let Ok(res) = output {
-                        print_result(&path, &res)
+                        print_result(path.to_str().unwrap_or("<missing>"), &res)
                     }
                 }
             }
@@ -108,21 +109,21 @@ pub fn exec(
 }
 
 type ExecuteResult = Result<ExecutionOutput, MrtError>;
-type ExecuteResultForAllPaths = Result<Vec<(String, ExecuteResult)>, MrtError>;
+type ExecuteResultForAllPaths = Result<Vec<(PathBuf, ExecuteResult)>, MrtError>;
 
 fn exec_all(
-    all_paths: Vec<String>,
+    all_paths: Vec<PathBuf>,
     prog: &str,
     args: &[String],
     in_parallel: bool,
     should_print_instantly: bool,
     execute_in_shell: bool,
 ) -> ExecuteResultForAllPaths {
-    let execute_func = |path: &String| {
+    let execute_func = |path: &PathBuf| {
         (
-            path.to_string(),
+            path.clone(), // TODO: Kanskje bare gjøre string conversion her?
             exec_at_path(
-                path.to_string(),
+                path,
                 prog.to_string(),
                 args,
                 should_print_instantly,
@@ -143,7 +144,7 @@ fn exec_all(
 }
 
 fn exec_at_path(
-    path: String,
+    path: &PathBuf,
     command: String,
     args: &[String],
     print: bool,
@@ -164,7 +165,7 @@ fn exec_at_path(
         cmd
     };
 
-    cmd.current_dir(&path);
+    cmd.current_dir(path);
 
     let mut stdout_l: Vec<String> = Vec::new();
     let mut stderr_l: Vec<String> = Vec::new();
@@ -178,7 +179,7 @@ fn exec_at_path(
     let stderr_reader = BufReader::new(stderr);
     let stderr_lines = stderr_reader.lines();
 
-    let headline = format!("\n\nin {}", path.as_str());
+    let headline = format!("\n\nin {}", path.to_str().unwrap_or("<missing>"));
     if print {
         println!("{}\n", headline.bright_black());
     }

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct ConfigFile {
@@ -9,5 +10,5 @@ pub struct ConfigFile {
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct Tag {
-    pub paths: Vec<String>,
+    pub paths: Vec<PathBuf>,
 }

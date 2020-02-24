@@ -86,7 +86,7 @@ pub fn handle_args_to_self(
         for (tag_name, tag) in &config.tags {
             println!("{}:", tag_name);
             for path in &tag.paths {
-                println!("\t{}", path);
+                println!("\t{:#?}", path);
             }
         }
     }
