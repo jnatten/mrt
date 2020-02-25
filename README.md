@@ -37,6 +37,7 @@ FLAGS:
                                terminal before every command has been executed.
     -h, --help                 Prints help information
     -l, --list-tags            List all specified +tag's and paths that are tagged...
+    -P, --panic-on-nonzero     Makes mrt quit if it encounters a non-zero exit code.
     -p, --parallel             Execute at each tagged path in parallel
                                This stores output until all executions are finished and then prints them in sequence,
                                unless --continuous-output specified.
@@ -81,6 +82,7 @@ EXAMPLES:
 Configuring tags are mostly done with the `mrt config` command.
 See examples at `mrt -h` or `mrt config -h` for more help.
 
+##### Config file
 The config file is by default located at `<HOME>/.mrtconfig.json` and is a json file.
 The fastest way to add multiple directories under multiple tags and such is probably editing this file by hand.
 The format is like this:
@@ -106,6 +108,13 @@ The format is like this:
   }
 }
 ```
+
+##### Environment variables
+Some environment variables can be used to modify `mrt`'s behavior. Here's a list of them:
+
+- `MRT_DEFAULT_TAGS` - A comma separated list of tags that should be used when no tags are specified on the command line.
+    - Example: `MRT_DEFAULT_TAGS=backend,frontend`
+- `MRT_CONFIG_PATH` - Where the mrt config path is located.
 
 ### Why?
 
