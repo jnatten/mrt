@@ -1,4 +1,4 @@
-use super::configmodels::*;
+use super::models::*;
 
 use crate::APP_VERSION;
 use std::collections::HashMap;

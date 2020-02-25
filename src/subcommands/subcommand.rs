@@ -1,5 +1,5 @@
 use crate::argparse::ParsedArgs;
-use crate::config::configmodels::ConfigFile;
+use crate::config::models::ConfigFile;
 use crate::subcommands::{config, status};
 use clap::{App, ArgMatches};
 

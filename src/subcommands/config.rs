@@ -1,5 +1,5 @@
 use super::super::config;
-use super::super::config::configmodels::*;
+use super::super::config::models::*;
 use crate::argparse::ParsedArgs;
 use crate::subcommands::subcommand::MrtSubcommand;
 use clap::{Arg, ArgMatches, SubCommand, Values};

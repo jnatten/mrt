@@ -1,4 +1,4 @@
-use super::config::configmodels::*;
+use super::config::models::*;
 use crate::mrt_errors::MrtError;
 use crate::subcommands::subcommand::MrtSubcommand;
 use args::*;

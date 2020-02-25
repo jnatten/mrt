@@ -1,5 +1,5 @@
 use super::argparse::ParsedArgs;
-use super::config::configmodels::ConfigFile;
+use super::config::models::ConfigFile;
 use super::mrt_errors::MrtError;
 use crate::argparse::args::*;
 use crate::util;

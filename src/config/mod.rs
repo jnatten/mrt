@@ -1,2 +1,2 @@
-pub mod configmodels;
 pub mod loader;
+pub mod models;

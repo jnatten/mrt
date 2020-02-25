@@ -1,5 +1,5 @@
 use super::super::argparse::ParsedArgs;
-use super::super::config::configmodels::ConfigFile;
+use super::super::config::models::ConfigFile;
 use super::super::execute;
 use super::super::util;
 use crate::subcommands::subcommand::MrtSubcommand;
