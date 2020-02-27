@@ -16,6 +16,7 @@ fn format_path_with_homedir(
 
     let sep_to_use = match &dir_to_use {
         Some(d) if d.ends_with('/') => String::default(),
+        Some(d) if d.is_empty() => String::default(),
         _ => sep.to_string(),
     };
 
@@ -59,5 +60,19 @@ mod test {
         let expected1 = (String::from("/"), String::from("home"));
 
         assert_eq!(result1, expected1);
+    }
+
+    #[test]
+    fn test_formatting_for_relative() {
+        let path1 = PathBuf::from("some/dir");
+        let result1 = format_path_with_homedir(&path1, Some(PathBuf::from("/home/test")), '/');
+        let expected1 = (String::from("some/"), String::from("dir"));
+
+        let path2 = PathBuf::from("dir");
+        let result2 = format_path_with_homedir(&path2, Some(PathBuf::from("/home/test")), '/');
+        let expected2 = (String::from(""), String::from("dir"));
+
+        assert_eq!(result1, expected1);
+        assert_eq!(result2, expected2);
     }
 }
