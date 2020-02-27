@@ -75,6 +75,9 @@ EXAMPLES:
 
     # Removes all tags from current directory
     $ mrt config -r
+
+    # Execute command in specified directory
+    $ mrt +/opt/somedir ls -l
     
 ```
 

@@ -38,8 +38,13 @@ pub fn get_all_paths(tags: &[String], config: &ConfigFile) -> Vec<PathBuf> {
                 match config.tags.get(tag_without_prefix) {
                     Some(tag) => tag.paths.clone(),
                     None => {
-                        println!("Config not found for tag '{}', skipping...", t);
-                        vec![]
+                        let path = PathBuf::from(tag_without_prefix);
+                        if path.exists() {
+                            vec![path]
+                        } else {
+                            println!("Tag or Path '{}' not found, skipping...", t);
+                            vec![]
+                        }
                     }
                 }
             })
@@ -51,7 +56,7 @@ pub fn get_all_paths(tags: &[String], config: &ConfigFile) -> Vec<PathBuf> {
     all_paths
 }
 
-fn get_headline(path: &str) -> String {
+fn get_headline(path: &PathBuf) -> String {
     let (prefix, basename) = util::split_on_basename(path);
     format!(
         "\n\n{} {}{}",
@@ -61,8 +66,8 @@ fn get_headline(path: &str) -> String {
     )
 }
 
-fn print_result(path: &str, output: &ExecutionOutput) {
-    let headline = get_headline(path);
+fn print_result(path: &PathBuf, output: &ExecutionOutput) {
+    let headline = get_headline(&path);
     if output.exit_code == 0 {
         println!("{}", headline.bright_black());
     } else {
@@ -111,7 +116,7 @@ pub fn exec(
             if !should_print_instantly {
                 for (path, output) in execute_output {
                     if let Ok(res) = output {
-                        print_result(path.as_ref(), &res)
+                        print_result(&path, &res)
                     }
                 }
             }
@@ -122,7 +127,7 @@ pub fn exec(
 }
 
 type ExecuteResult = Result<ExecutionOutput, MrtError>;
-type ExecuteResultForAllPaths = Result<Vec<(String, ExecuteResult)>, MrtError>;
+type ExecuteResultForAllPaths = Result<Vec<(PathBuf, ExecuteResult)>, MrtError>;
 
 fn exec_all(
     all_paths: Vec<PathBuf>,
@@ -134,9 +139,8 @@ fn exec_all(
     panic_on_nonzero_exitcode: bool,
 ) -> ExecuteResultForAllPaths {
     let execute_func = |path: &PathBuf| {
-        let path_as_string = String::from(path.to_str().unwrap_or("<missing>"));
         (
-            path_as_string,
+            path.clone(),
             exec_at_path(
                 path,
                 prog.to_string(),
@@ -243,7 +247,7 @@ fn exec_with_captured_output(mut cmd: Command) -> ExecuteResult {
 /// This is useful when we want the subprocess to be able to control their own outputs completely
 /// Example when using vim as a subcommand
 fn exec_with_connected_outputs(mut cmd: Command, path: &PathBuf) -> ExecuteResult {
-    let headline = get_headline(path.to_str().unwrap_or("<missing>"));
+    let headline = get_headline(path);
     println!("{}\n", headline);
 
     let mut child = cmd.spawn()?;

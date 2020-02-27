@@ -49,6 +49,9 @@ fn help_text() -> String {
 
     {}
     {}
+
+    {}
+    {}
     ",
         "# Tag current directory with tag `backend`".bright_black(),
         "$ mrt config -a backend",
@@ -68,7 +71,9 @@ fn help_text() -> String {
         "# Removes the `backend` tag entirely, leaving the directories intact".bright_black(),
         "$ mrt config -D backend",
         "# Removes all tags from current directory".bright_black(),
-        "$ mrt config -r"
+        "$ mrt config -r",
+        "# Execute command in specified directory".bright_black(),
+        "$ mrt +/opt/somedir ls -l",
     )
 }
 

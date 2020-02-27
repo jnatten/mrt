@@ -6,6 +6,7 @@ use crate::subcommands::subcommand::MrtSubcommand;
 use clap::SubCommand;
 use colored::{ColoredString, Colorize};
 use std::cmp::max;
+use std::path::PathBuf;
 use std::process::Command;
 
 pub fn get() -> MrtSubcommand {
@@ -20,12 +21,11 @@ fn status(parsed_arguments: &ParsedArgs, config: ConfigFile) {
     let paths = execute::get_all_paths(&parsed_arguments.tags, &config);
 
     for path in paths {
-        let str_path = path.to_str().unwrap_or("<missing>");
-        println!("{}", run_status(str_path));
+        println!("{}", run_status(&path));
     }
 }
 
-fn run_status(path: &str) -> String {
+fn run_status(path: &PathBuf) -> String {
     let mut cmd = Command::new("git");
 
     cmd.args(&["-c", "color.ui=always"])
@@ -38,7 +38,7 @@ fn run_status(path: &str) -> String {
     }
 }
 
-fn format_output(path: &str, out: &[u8]) -> String {
+fn format_output(path: &PathBuf, out: &[u8]) -> String {
     let output_string = String::from_utf8_lossy(out).to_string();
     let lines: Vec<String> = output_string.split('\n').map(String::from).collect();
 
@@ -47,9 +47,9 @@ fn format_output(path: &str, out: &[u8]) -> String {
     let behindness: String = get_colored_behindness(&lines);
 
     let dirtyness_spaces = get_spaces_with_maxlen(25, dirtyness.len());
-    let path_spaces = get_spaces_with_maxlen(50, path.len());
 
     let formatted_path = util::format_path(path);
+    let path_spaces = get_spaces_with_maxlen(50, formatted_path.len());
 
     format!(
         "{}{}{}{}{}{}",
