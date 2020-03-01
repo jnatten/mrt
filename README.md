@@ -32,7 +32,6 @@ USAGE:
     mrt [FLAGS] [+tag ..] [--] [command]
 
 FLAGS:
-    -b, --bash                 Will make command be executed in the context of a shell. IE: `bash -c '<command>'`
     -c, --continuous-output    Will make output from commands executed in parallel with --parallel argument print to
                                terminal before every command has been executed.
     -h, --help                 Prints help information
@@ -41,6 +40,9 @@ FLAGS:
     -p, --parallel             Execute at each tagged path in parallel
                                This stores output until all executions are finished and then prints them in sequence,
                                unless --continuous-output specified.
+    -s, --shell                Will make command be executed in the context of a shell.
+                               IE: `bash -c '<command>'`
+                               `powershell /C '<command>' on windows.
     -V, --version              Prints version information
 
 SUBCOMMANDS:
@@ -78,7 +80,7 @@ EXAMPLES:
 
     # Execute command in specified directory
     $ mrt +/opt/somedir ls -l
-    
+
 ```
 
 ### Configuration
