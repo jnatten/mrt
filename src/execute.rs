@@ -174,11 +174,17 @@ fn exec_at_path(
     let color_args = get_color_args(&command);
 
     let mut cmd = if execute_in_shell {
-        let bash_command_arg = format!("{} {} {}", &command, color_args.join(" "), args.join(" "));
-
-        let mut bash = Command::new("bash");
-        bash.args(&["-c", bash_command_arg.as_str()]);
-        bash
+        if cfg!(target_os = "windows") {
+            let powershell_command_arg = format!("{} {}", &command, args.join(" "));
+            let mut powershell = Command::new("powershell");
+            powershell.args(&["/C", powershell_command_arg.as_str()]);
+            powershell
+        } else {
+            let bash_command_arg = format!("{} {} {}", &command, color_args.join(" "), args.join(" "));
+            let mut bash = Command::new("bash");
+            bash.args(&["-c", bash_command_arg.as_str()]);
+            bash
+        }
     } else {
         let mut prog = Command::new(&command);
         prog.args(color_args);
