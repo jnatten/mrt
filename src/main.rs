@@ -108,10 +108,10 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
         )
         .arg(
             Arg::with_name(SHELL_EXECUTION_ARG)
-                .short("b")
+                .short("s")
                 .long(SHELL_EXECUTION_ARG)
                 .multiple(false)
-                .help("Will make command be executed in the context of a shell. IE: `bash -c '<command>'`")
+                .help("Will make command be executed in the context of a shell. \nIE: `bash -c '<command>'`\n`powershell /C '<command>' on windows.")
         )
         .arg(
             Arg::with_name(PANIC_ON_NON_ZERO_ARG)
@@ -127,7 +127,21 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
         .and_then(|c| execute::exec(&args, parsed_arguments, c))
 }
 
+#[cfg(target_os = "windows")]
+fn colored_conf() {
+    colored::control::set_virtual_terminal(true).expect(
+        "Something is really wrong, colored::controll::set_virtual_terminal should always be OK",
+    );
+}
+
+#[cfg(not(target_os = "windows"))]
+fn colored_conf() {}
+
 fn main() {
+    if cfg!(target_os = "windows") {
+        colored_conf()
+    };
+
     let config_path = get_config_path().unwrap_or_else(|| PathBuf::from(".mrtconfig.json"));
     let config_to_use = match config::loader::load_config(config_path.as_path()) {
         Ok(config) => config,

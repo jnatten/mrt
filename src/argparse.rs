@@ -27,7 +27,7 @@ pub mod args {
     pub const PARALLEL_TAG: &str = "parallel";
     pub const LIST_TAGS_ARG: &str = "list-tags";
     pub const CONTINUOUS_OUTPUT_ARG: &str = "continuous-output";
-    pub const SHELL_EXECUTION_ARG: &str = "bash";
+    pub const SHELL_EXECUTION_ARG: &str = "shell";
     pub const PANIC_ON_NON_ZERO_ARG: &str = "panic-on-nonzero";
 }
 

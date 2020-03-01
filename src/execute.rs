@@ -180,7 +180,8 @@ fn exec_at_path(
             powershell.args(&["/C", powershell_command_arg.as_str()]);
             powershell
         } else {
-            let bash_command_arg = format!("{} {} {}", &command, color_args.join(" "), args.join(" "));
+            let bash_command_arg =
+                format!("{} {} {}", &command, color_args.join(" "), args.join(" "));
             let mut bash = Command::new("bash");
             bash.args(&["-c", bash_command_arg.as_str()]);
             bash
