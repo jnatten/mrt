@@ -128,19 +128,18 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
 }
 
 #[cfg(target_os = "windows")]
-fn colored_conf() {
+fn configure_colored_crate() {
     colored::control::set_virtual_terminal(true).expect(
         "Something is really wrong, colored::controll::set_virtual_terminal should always be OK",
     );
 }
 
+// This empty function exists so compilation doesn't fail on platforms that doesn't need the configuration of colored
 #[cfg(not(target_os = "windows"))]
-fn colored_conf() {}
+fn configure_colored_crate() {}
 
 fn main() {
-    if cfg!(target_os = "windows") {
-        colored_conf()
-    };
+    configure_colored_crate();
 
     let config_path = get_config_path().unwrap_or_else(|| PathBuf::from(".mrtconfig.json"));
     let config_to_use = match config::loader::load_config(config_path.as_path()) {
