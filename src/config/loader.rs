@@ -1,7 +1,6 @@
 use super::models::*;
 
 use super::super::util::expand_pathbuf;
-use crate::APP_VERSION;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
@@ -11,9 +10,19 @@ use std::path::{Path, PathBuf};
 const CONFIG_ENV_NAME: &str = "MRT_CONFIG_PATH";
 
 pub fn load_config(path: &Path) -> Result<ConfigFile> {
-    let config_string = read_file_to_string(path)?;
-    let data: ConfigFile = serde_json::from_str(&config_string)?;
-    Ok(expand_config_paths(data))
+    match read_file_to_string(path) {
+        Ok(config_string) => {
+            let data: ConfigFile = serde_json::from_str(&config_string)?;
+            Ok(expand_config_paths(data))
+        }
+        _ => {
+            eprintln!(
+                "Could not open config, at '{}', creating empty one...",
+                path.display()
+            );
+            Ok(ConfigFile::new())
+        }
+    }
 }
 
 fn expand_config_paths(mut config: ConfigFile) -> ConfigFile {
@@ -49,15 +58,6 @@ fn save_config_at(path: &Path, config_struct: &ConfigFile) -> Result<()> {
     file.write_all(data.as_bytes())?;
 
     Ok(())
-}
-
-pub fn create_new_empty_config(path: &Path) -> Result<ConfigFile> {
-    let new_config = ConfigFile {
-        version: String::from(APP_VERSION),
-        tags: HashMap::new(),
-    };
-
-    save_config_at(path, &new_config).map(|()| new_config)
 }
 
 fn read_file_to_string(path: &Path) -> Result<String> {

@@ -144,13 +144,10 @@ fn main() {
     let config_path = get_config_path().unwrap_or_else(|| PathBuf::from(".mrtconfig.json"));
     let config_to_use = match config::loader::load_config(config_path.as_path()) {
         Ok(config) => config,
-        _ => match config::loader::create_new_empty_config(config_path.as_path()) {
-            Ok(config) => config,
-            _ => {
-                println!("Something went wrong, exiting");
-                ::std::process::exit(1)
-            }
-        },
+        _ => {
+            eprintln!("{}", "ERROR: Could not load config...".red());
+            exit(2);
+        }
     };
 
     let result = start_with_config(config_to_use);
