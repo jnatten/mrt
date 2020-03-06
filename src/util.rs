@@ -1,6 +1,17 @@
 use colored::Colorize;
 use std::path::PathBuf;
 
+pub fn expand_path(input: &str) -> PathBuf {
+    let expanded = String::from(shellexpand::tilde(input));
+    PathBuf::from(expanded)
+}
+
+pub fn expand_pathbuf(input: PathBuf) -> PathBuf {
+    let path_as_str = input.to_str().unwrap_or_default();
+    let expanded = String::from(shellexpand::tilde(path_as_str));
+    PathBuf::from(expanded)
+}
+
 fn format_path_with_homedir(
     path: &PathBuf,
     home_dir: Option<PathBuf>,

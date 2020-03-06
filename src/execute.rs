@@ -1,8 +1,8 @@
 use super::argparse::ParsedArgs;
 use super::config::models::ConfigFile;
 use super::mrt_errors::MrtError;
+use super::util;
 use crate::argparse::args::*;
-use crate::util;
 use clap::ArgMatches;
 use colored::Colorize;
 use rayon::prelude::*;
@@ -38,7 +38,7 @@ pub fn get_all_paths(tags: &[String], config: &ConfigFile) -> Vec<PathBuf> {
                 match config.tags.get(tag_without_prefix) {
                     Some(tag) => tag.paths.clone(),
                     None => {
-                        let path = PathBuf::from(tag_without_prefix);
+                        let path = util::expand_path(tag_without_prefix);
                         if path.exists() {
                             vec![path]
                         } else {

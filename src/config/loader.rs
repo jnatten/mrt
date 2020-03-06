@@ -1,5 +1,6 @@
 use super::models::*;
 
+use super::super::util::expand_pathbuf;
 use crate::APP_VERSION;
 use std::collections::HashMap;
 use std::fs::File;
@@ -12,7 +13,22 @@ const CONFIG_ENV_NAME: &str = "MRT_CONFIG_PATH";
 pub fn load_config(path: &Path) -> Result<ConfigFile> {
     let config_string = read_file_to_string(path)?;
     let data: ConfigFile = serde_json::from_str(&config_string)?;
-    Ok(data)
+    Ok(expand_config_paths(data))
+}
+
+fn expand_config_paths(mut config: ConfigFile) -> ConfigFile {
+    let mut tags_after_expand: HashMap<String, Tag> = HashMap::new();
+    for (tag_name, tag) in &config.tags {
+        let paths = tag
+            .paths
+            .iter()
+            .map(|p| expand_pathbuf(p.clone()))
+            .collect::<Vec<PathBuf>>();
+        tags_after_expand.insert(tag_name.clone(), Tag { paths });
+    }
+
+    config.tags = tags_after_expand;
+    config
 }
 
 pub fn save_config(config: ConfigFile) -> Result<ConfigFile> {

@@ -15,6 +15,7 @@ serde_derive = "1.0.98"
 serde_json = "1.0.40"
 
 dirs = "2.0.2" # Used to determine dir for config platform agnostic
+shellexpand = "2.0.0" # Used to expand tilde as home etc...
 
 [dev-dependencies]
 tempdir = "0.3.7" # Used for testing config functionality
