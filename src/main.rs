@@ -79,7 +79,10 @@ fn help_text() -> String {
 
 fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
     let subcmds: Vec<MrtSubcommand> = subcommand::get_subcommands();
-    let parsed_arguments = argparse::parse_arguments(&subcmds);
+
+    let args = std::env::args();
+    let args_vec: Vec<String> = args.collect();
+    let parsed_arguments = argparse::parse_arguments(args_vec, &subcmds);
 
     let args = clap::App::new(APP_NAME)
         .version(APP_VERSION)

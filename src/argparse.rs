@@ -86,11 +86,9 @@ fn get_tags_from_env() -> Vec<String> {
     }
 }
 
-pub fn parse_arguments(subcommands: &[MrtSubcommand]) -> ParsedArgs {
+pub fn parse_arguments(args_vec: Vec<String>, subcommands: &[MrtSubcommand]) -> ParsedArgs {
     let subcommand_names: Vec<&String> = subcommands.iter().map(|x| &x.name).collect();
 
-    let args = std::env::args();
-    let args_vec: Vec<String> = args.collect();
     find_tags_in_args(&args_vec, &subcommand_names)
 }
 
