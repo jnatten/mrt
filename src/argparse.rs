@@ -1,6 +1,7 @@
 use super::config::models::*;
 use crate::mrt_errors::MrtError;
 use crate::subcommands::subcommand::MrtSubcommand;
+use crate::util::format_path;
 use args::*;
 use clap::ArgMatches;
 use std::process::exit;
@@ -104,7 +105,8 @@ pub fn handle_args_to_self(
         for (tag_name, tag) in &config.tags {
             println!("{}:", tag_name);
             for path in &tag.paths {
-                println!("\t{:#?}", path);
+                let formatted_path = format_path(path);
+                println!("  {}", formatted_path);
             }
         }
     }
