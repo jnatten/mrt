@@ -34,8 +34,20 @@ fn run_status(path: &PathBuf) -> String {
 
     match cmd.output() {
         Ok(output) => format_output(path, &output.stdout),
-        _ => String::from(""),
+        _ => format_error(path),
     }
+}
+
+fn format_error(path: &PathBuf) -> String {
+    let formatted_path = util::format_path(path).red();
+    let path_spaces = get_spaces_with_maxlen(50, formatted_path.len());
+
+    format!(
+        "{}{}{}",
+        formatted_path,
+        path_spaces,
+        "SOMETHING WRONG".red()
+    )
 }
 
 fn format_output(path: &PathBuf, out: &[u8]) -> String {
