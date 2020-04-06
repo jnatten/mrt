@@ -60,7 +60,7 @@ fn help_text() -> String {
         "# List tagged directories".bright_black(),
         "$ mrt -l",
         "# Execute command in all directories tagged with `backend`".bright_black(),
-        "$ mrt +backend sed -i 's/someversion = \"1.0.0\"/someversion = \"1.2.0\"/g build.sbt",
+        "$ mrt +backend sed -i 's/someversion = \"1.0.0\"/someversion = \"1.2.0\"/g' build.sbt",
         "# Execute command in all directories tagged with `backend` in parallel".bright_black(),
         "$ mrt -p +backend git pull",
         "# Execute command in all directories tagged with `backend` and `frontend` in parallel"
