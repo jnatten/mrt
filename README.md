@@ -7,7 +7,7 @@ This is not a finished product and there is a chance you will encounter bugs or 
 
 Reports of [issues](https://github.com/jnatten/mrt/issues/new) are really appreciated, along with pull-requests and suggestions for new features and how to improve the code (Rust is still very new to me).
 
-[![asciicast](https://asciinema.org/a/rchc1S2yrIwjY3CPbhrTVmT8S.svg)](https://asciinema.org/a/rchc1S2yrIwjY3CPbhrTVmT8S)
+![Example](./mrt-demo.svg)
 
 ### Installation
 
