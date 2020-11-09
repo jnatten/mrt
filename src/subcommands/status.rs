@@ -18,7 +18,7 @@ pub fn get() -> MrtSubcommand {
 }
 
 fn status(parsed_arguments: &ParsedArgs, config: ConfigFile) {
-    let paths = execute::get_all_paths(&parsed_arguments.tags, &config);
+    let paths = execute::get_all_paths(&parsed_arguments.tags, &config, false);
 
     for path in paths {
         println!("{}", run_status(&path));
@@ -26,16 +26,20 @@ fn status(parsed_arguments: &ParsedArgs, config: ConfigFile) {
 }
 
 fn run_status(path: &PathBuf) -> String {
+    match run_status_command(path).output() {
+        Ok(output) => format_output(path, &output.stdout),
+        _ => format_error(path),
+    }
+}
+
+pub fn run_status_command(path: &PathBuf) -> Command {
     let mut cmd = Command::new("git");
 
     cmd.args(&["-c", "color.ui=always"])
         .args(&["status", "--branch", "--porcelain"])
         .current_dir(path);
 
-    match cmd.output() {
-        Ok(output) => format_output(path, &output.stdout),
-        _ => format_error(path),
-    }
+    cmd
 }
 
 fn format_error(path: &PathBuf) -> String {
@@ -75,14 +79,20 @@ fn get_spaces_with_maxlen(max_len: i32, string_length: usize) -> String {
     " ".repeat(y)
 }
 
-fn get_dirtyness(lines: &[String]) -> String {
+pub fn get_num_dirty_files(lines: &[String]) -> usize {
     let modified_files: Vec<&String> = lines
         .iter()
         .filter(|l| !(l.starts_with("## ") || l.is_empty()))
         .collect();
 
-    if !modified_files.is_empty() {
-        let text = format!("{} modified", modified_files.len());
+    modified_files.len()
+}
+
+fn get_dirtyness(lines: &[String]) -> String {
+    let num_modified = get_num_dirty_files(lines);
+
+    if num_modified != 0 {
+        let text = format!("{} modified", num_modified);
         format!("{}", text.red())
     } else {
         format!("{}", "Clean".green())
@@ -154,6 +164,7 @@ mod test {
     fn to_string_vec(v: Vec<&str>) -> Vec<String> {
         v.into_iter().map(|s| s.to_owned()).collect()
     }
+
     #[test]
     fn test_get_behindness_func() {
         let input1 = to_string_vec(vec!["## mas...[ter...origin/mas...[ter [behind 1]"]);

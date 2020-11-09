@@ -3,6 +3,7 @@ use super::config::models::ConfigFile;
 use super::mrt_errors::MrtError;
 use super::util;
 use crate::argparse::args::*;
+use crate::subcommands::status::{get_num_dirty_files, run_status_command};
 use clap::ArgMatches;
 use colored::Colorize;
 use rayon::prelude::*;
@@ -17,7 +18,7 @@ struct ExecutionOutput {
     stderr: String,
 }
 
-pub fn get_all_paths(tags: &[String], config: &ConfigFile) -> Vec<PathBuf> {
+pub fn get_all_paths(tags: &[String], config: &ConfigFile, only_in_modified: bool) -> Vec<PathBuf> {
     let mut all_paths: Vec<PathBuf> = if tags.is_empty() {
         let nested_paths: Vec<Vec<PathBuf>> = config
             .tags
@@ -53,7 +54,48 @@ pub fn get_all_paths(tags: &[String], config: &ConfigFile) -> Vec<PathBuf> {
 
     all_paths.sort();
     all_paths.dedup();
-    all_paths
+    if only_in_modified {
+        match get_modified_paths(all_paths.clone()) {
+            Ok(ps) => ps,
+            Err(e) => {
+                eprintln!(
+                    "Error when detecting whether paths where modified or not: {}",
+                    e
+                );
+                all_paths
+            }
+        }
+    } else {
+        all_paths
+    }
+}
+
+fn get_modified_paths(paths: Vec<PathBuf>) -> Result<Vec<PathBuf>, MrtError> {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(paths.len())
+        .build_global()?;
+
+    paths
+        .into_iter()
+        .filter_map(|p| match is_modified(&p) {
+            Ok(modified) if modified => Some(Ok(p)),
+            Ok(_) => None,
+            Err(e) => Some(Err(e)),
+        })
+        .collect::<Result<Vec<PathBuf>, MrtError>>()
+}
+
+fn is_modified(path: &PathBuf) -> Result<bool, MrtError> {
+    match run_status_command(path).output() {
+        Ok(output) => {
+            let output_string = String::from_utf8_lossy(&output.stdout).to_string();
+            let lines: Vec<String> = output_string.split('\n').map(String::from).collect();
+            let is_dirty = get_num_dirty_files(&lines) != 0;
+
+            Ok(is_dirty)
+        }
+        Err(e) => Err(MrtError::from(e)),
+    }
 }
 
 fn get_headline(path: &PathBuf) -> String {
@@ -95,7 +137,11 @@ pub fn exec(
         Some(prog) => {
             let args = &parsed_args.after_tags[1..];
 
-            let all_paths = get_all_paths(&parsed_args.tags, &config);
+            let only_in_modified = clap_args.is_present(ONLY_IN_MODIFIED);
+
+            let all_paths = get_all_paths(&parsed_args.tags, &config, only_in_modified);
+
+            println!("All paths: {:?}", all_paths);
 
             let should_print_instantly = (!clap_args.is_present(PARALLEL_TAG))
                 || clap_args.is_present(CONTINUOUS_OUTPUT_ARG);

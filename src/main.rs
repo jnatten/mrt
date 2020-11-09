@@ -120,6 +120,14 @@ fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
                 .multiple(false)
                 .help("Makes mrt quit if it encounters a non-zero exit code.")
         )
+        .arg(
+            Arg::with_name(ONLY_IN_MODIFIED)
+                .short("m")
+                .long(ONLY_IN_MODIFIED)
+                .multiple(false)
+                .help("Only execute command in modified repos (Modification detected by git-status).")
+        )
+
         .subcommands(subcmds.iter().map(|cmd| cmd.doc.to_owned()))
         .get_matches_from(&parsed_arguments.before_tags);
 
