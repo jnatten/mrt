@@ -169,7 +169,7 @@ mod test {
         };
 
         let names = subcmd_names();
-        let s: Vec<&String> = names.iter().map(|x| x).collect();
+        let s: Vec<&String> = names.iter().collect();
         let result = find_tags_in_args(&test_args, &s);
 
         assert_eq!(result, expected);
@@ -212,7 +212,7 @@ mod test {
         };
 
         let names = subcmd_names();
-        let s: Vec<&String> = names.iter().map(|x| x).collect();
+        let s: Vec<&String> = names.iter().collect();
         let result1 = find_tags_in_args(&test_args1, &s);
         let result2 = find_tags_in_args(&test_args2, &s);
         let result3 = find_tags_in_args(&test_args3, &s);
@@ -235,7 +235,7 @@ mod test {
         };
 
         let names = subcmd_names();
-        let s: Vec<&String> = names.iter().map(|x| x).collect();
+        let s: Vec<&String> = names.iter().collect();
         let result = find_tags_in_args(&test_args, &s);
 
         assert_eq!(result, expected);
@@ -259,7 +259,7 @@ mod test {
         };
 
         let names = subcmd_names();
-        let s: Vec<&String> = names.iter().map(|x| x).collect();
+        let s: Vec<&String> = names.iter().collect();
         let result1 = find_tags_in_args(&test_args1, &s);
         let result2 = find_tags_in_args(&test_args2, &s);
 
@@ -279,7 +279,7 @@ mod test {
         };
 
         let names = subcmd_names();
-        let s: Vec<&String> = names.iter().map(|x| x).collect();
+        let s: Vec<&String> = names.iter().collect();
         let result1 = find_tags_in_args(&test_args1, &s);
 
         assert_eq!(result1, expected1);
