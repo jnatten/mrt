@@ -14,8 +14,8 @@ pub struct ParsedArgs {
 }
 
 impl ParsedArgs {
-    fn initial() -> ParsedArgs {
-        ParsedArgs {
+    const fn initial() -> Self {
+        Self {
             tags: Vec::new(),
             before_tags: Vec::new(),
             after_tags: Vec::new(),

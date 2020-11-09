@@ -10,8 +10,8 @@ pub struct ConfigFile {
 }
 
 impl ConfigFile {
-    pub fn new() -> ConfigFile {
-        ConfigFile {
+    pub fn new() -> Self {
+        Self {
             version: String::from(APP_VERSION),
             tags: HashMap::new(),
         }

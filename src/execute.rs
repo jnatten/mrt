@@ -104,7 +104,7 @@ fn get_headline(path: &PathBuf) -> String {
 }
 
 fn print_result(path: &PathBuf, output: &ExecutionOutput) {
-    let headline = get_headline(&path);
+    let headline = get_headline(path);
     if output.exit_code == 0 {
         println!("{}", headline.bright_black());
     } else {
@@ -259,11 +259,17 @@ fn exec_with_captured_output(mut cmd: Command) -> ExecuteResult {
     cmd.stderr(Stdio::piped());
 
     let mut child = cmd.spawn()?;
-    let stdout = child.stdout.as_mut().unwrap();
+    let stdout = child
+        .stdout
+        .as_mut()
+        .ok_or_else(|| anyhow!("Stdout missing"))?;
     let stdout_reader = BufReader::new(stdout);
     let stdout_lines = stdout_reader.lines();
 
-    let stderr = child.stderr.as_mut().unwrap();
+    let stderr = child
+        .stderr
+        .as_mut()
+        .ok_or_else(|| anyhow!("Stderr missing"))?;
     let stderr_reader = BufReader::new(stderr);
     let stderr_lines = stderr_reader.lines();
 

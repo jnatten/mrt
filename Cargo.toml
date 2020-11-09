@@ -1,8 +1,13 @@
 [package]
 name = "mrt"
+description = "A tool to interact with multiple repositories, by executing the specified commands in multiple contexts."
 version = "0.0.1"
 authors = ["Jonas Natten <jonas@natten.it>"]
 edition = "2018"
+license-file = "LICENSE"
+repository = "https://github.com/jnatten/mrt"
+keywords = ["vcs", "git", "microservices", "multitasking", "repository-management"]
+categories = ["cli", "repository-management"]
 
 [dependencies]
 clap = "2.33.0" # Command line argument parser

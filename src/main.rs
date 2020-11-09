@@ -1,3 +1,4 @@
+#![deny(clippy::all, clippy::nursery, clippy::cargo, clippy::unwrap_used)]
 mod argparse;
 mod config;
 mod execute;
@@ -148,7 +149,7 @@ fn configure_colored_crate() {
 
 // This empty function exists so compilation doesn't fail on platforms that doesn't need the configuration of colored
 #[cfg(not(target_os = "windows"))]
-fn configure_colored_crate() {}
+const fn configure_colored_crate() {}
 
 fn main() {
     configure_colored_crate();
