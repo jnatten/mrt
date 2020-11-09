@@ -1,16 +1,15 @@
 use super::argparse::ParsedArgs;
 use super::config::models::ConfigFile;
-use super::mrt_errors::MrtError;
 use super::util;
 use crate::argparse::args::*;
 use crate::subcommands::status::{get_num_dirty_files, run_status_command};
+use anyhow::{anyhow, Result};
 use clap::ArgMatches;
 use colored::Colorize;
 use rayon::prelude::*;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::{exit, Command, Stdio};
-use std::result::Result;
 
 struct ExecutionOutput {
     exit_code: i32,
@@ -70,7 +69,7 @@ pub fn get_all_paths(tags: &[String], config: &ConfigFile, only_in_modified: boo
     }
 }
 
-fn get_modified_paths(paths: Vec<PathBuf>) -> Result<Vec<PathBuf>, MrtError> {
+fn get_modified_paths(paths: Vec<PathBuf>) -> Result<Vec<PathBuf>> {
     rayon::ThreadPoolBuilder::new()
         .num_threads(paths.len())
         .build_global()?;
@@ -82,20 +81,16 @@ fn get_modified_paths(paths: Vec<PathBuf>) -> Result<Vec<PathBuf>, MrtError> {
             Ok(_) => None,
             Err(e) => Some(Err(e)),
         })
-        .collect::<Result<Vec<PathBuf>, MrtError>>()
+        .collect::<Result<Vec<PathBuf>>>()
 }
 
-fn is_modified(path: &PathBuf) -> Result<bool, MrtError> {
-    match run_status_command(path).output() {
-        Ok(output) => {
-            let output_string = String::from_utf8_lossy(&output.stdout).to_string();
-            let lines: Vec<String> = output_string.split('\n').map(String::from).collect();
-            let is_dirty = get_num_dirty_files(&lines) != 0;
+fn is_modified(path: &PathBuf) -> Result<bool> {
+    let output = run_status_command(path).output()?;
+    let output_string = String::from_utf8_lossy(&output.stdout).to_string();
+    let lines: Vec<String> = output_string.split('\n').map(String::from).collect();
+    let is_dirty = get_num_dirty_files(&lines) != 0;
 
-            Ok(is_dirty)
-        }
-        Err(e) => Err(MrtError::from(e)),
-    }
+    Ok(is_dirty)
 }
 
 fn get_headline(path: &PathBuf) -> String {
@@ -125,15 +120,11 @@ fn print_result(path: &PathBuf, output: &ExecutionOutput) {
     }
 }
 
-pub fn exec(
-    clap_args: &ArgMatches,
-    parsed_args: ParsedArgs,
-    config: ConfigFile,
-) -> Result<i8, MrtError> {
+pub fn exec(clap_args: &ArgMatches, parsed_args: ParsedArgs, config: ConfigFile) -> Result<i8> {
     let program = parsed_args.after_tags.first();
 
     match program {
-        None => Err(MrtError::new("Nothing to execute")),
+        None => Err(anyhow!("Nothing to execute")),
         Some(prog) => {
             let args = &parsed_args.after_tags[1..];
 
@@ -172,8 +163,8 @@ pub fn exec(
     }
 }
 
-type ExecuteResult = Result<ExecutionOutput, MrtError>;
-type ExecuteResultForAllPaths = Result<Vec<(PathBuf, ExecuteResult)>, MrtError>;
+type ExecuteResult = Result<ExecutionOutput>;
+type ExecuteResultForAllPaths = Result<Vec<(PathBuf, ExecuteResult)>>;
 
 fn exec_all(
     all_paths: Vec<PathBuf>,

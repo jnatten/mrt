@@ -1,7 +1,7 @@
 use super::config::models::*;
-use crate::mrt_errors::MrtError;
 use crate::subcommands::subcommand::MrtSubcommand;
 use crate::util::format_path;
+use anyhow::Result;
 use args::*;
 use clap::ArgMatches;
 use std::process::exit;
@@ -100,7 +100,7 @@ pub fn handle_args_to_self(
     args: &ArgMatches,
     parsed_arguments: &ParsedArgs,
     config: ConfigFile,
-) -> std::result::Result<ConfigFile, MrtError> {
+) -> Result<ConfigFile> {
     if args.is_present(LIST_TAGS_ARG) {
         println!("Config Version: {}", &config.version);
         for (tag_name, tag) in &config.tags {

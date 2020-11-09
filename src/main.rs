@@ -1,7 +1,6 @@
 mod argparse;
 mod config;
 mod execute;
-mod mrt_errors;
 mod subcommands;
 mod util;
 
@@ -11,6 +10,7 @@ const APP_VERSION: &str = "0.0.1";
 
 use crate::subcommands::subcommand;
 use crate::subcommands::subcommand::MrtSubcommand;
+use anyhow::Result;
 use argparse::args::*;
 use clap::Arg;
 use colored::Colorize;
@@ -18,7 +18,6 @@ use config::loader::get_config_path;
 use config::models::ConfigFile;
 use std::path::PathBuf;
 use std::process::exit;
-use std::result::Result;
 
 fn help_text() -> String {
     format!(
@@ -77,7 +76,7 @@ fn help_text() -> String {
     )
 }
 
-fn start_with_config(config: ConfigFile) -> Result<i8, mrt_errors::MrtError> {
+fn start_with_config(config: ConfigFile) -> Result<i8> {
     let subcmds: Vec<MrtSubcommand> = subcommand::get_subcommands();
     let parsed_arguments = argparse::parse_arguments(&subcmds);
 
