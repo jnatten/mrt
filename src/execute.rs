@@ -120,7 +120,7 @@ fn print_result(path: &PathBuf, output: &ExecutionOutput) {
     }
 }
 
-pub fn exec(clap_args: &ArgMatches, parsed_args: ParsedArgs, config: ConfigFile) -> Result<i8> {
+pub fn exec(clap_args: &ArgMatches, parsed_args: ParsedArgs, config: ConfigFile) -> Result<i32> {
     let program = parsed_args.after_tags.first();
 
     match program {
@@ -147,15 +147,18 @@ pub fn exec(clap_args: &ArgMatches, parsed_args: ParsedArgs, config: ConfigFile)
                 panic_on_nonzero,
             )?;
 
-            if !should_print_instantly {
-                for (path, output) in execute_output {
-                    if let Ok(res) = output {
-                        print_result(&path, &res)
-                    }
-                }
-            }
-
-            Ok(0) // TODO: Somehow handle errors, maybe map over rather than for loop and print all
+            execute_output
+                .into_iter()
+                .map(|(path, output)| {
+                    output.map(|res| {
+                        if !should_print_instantly {
+                            print_result(&path, &res);
+                        }
+                        path
+                    })
+                })
+                .collect::<Result<Vec<PathBuf>>>()
+                .map(|_| 0)
         }
     }
 }

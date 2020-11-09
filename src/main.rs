@@ -81,7 +81,7 @@ fn help_text() -> String {
     )
 }
 
-fn start_with_config(config: ConfigFile) -> Result<i8> {
+fn start_with_config(config: ConfigFile) -> Result<i32> {
     let subcmds: Vec<MrtSubcommand> = subcommand::get_subcommands();
     let parsed_arguments = argparse::parse_arguments(&subcmds);
 
@@ -162,9 +162,8 @@ fn main() {
         }
     };
 
-    let result = start_with_config(config_to_use);
-    if result.is_ok() {
-        exit(0)
+    if let Ok(exit_code) = start_with_config(config_to_use) {
+        exit(exit_code)
     } else {
         exit(1)
     }
