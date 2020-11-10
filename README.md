@@ -38,11 +38,12 @@ FLAGS:
                                terminal before every command has been executed.
     -h, --help                 Prints help information
     -l, --list-tags            List all specified +tag's and paths that are tagged...
+    -m, --modified-only        Only execute command in modified repos (Modification detected by git-status).
     -P, --panic-on-nonzero     Makes mrt quit if it encounters a non-zero exit code.
     -p, --parallel             Execute at each tagged path in parallel
                                This stores output until all executions are finished and then prints them in sequence,
                                unless --continuous-output specified.
-    -s, --shell                Will make command be executed in the context of a shell.
+    -s, --shell                Will make command be executed in the context of a shell. 
                                IE: `bash -c '<command>'`
                                `powershell /C '<command>' on windows.
     -V, --version              Prints version information
@@ -82,6 +83,9 @@ EXAMPLES:
 
     # Execute command in specified directory
     $ mrt +/opt/somedir ls -l
+
+    # Execute command in dirty repositories
+    $ mrt -m git diff
 
 ```
 
