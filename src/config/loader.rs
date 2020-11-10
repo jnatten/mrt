@@ -25,9 +25,9 @@ pub fn load_config(path: &Path) -> Result<ConfigFile> {
     }
 }
 
-pub fn store_previous_paths(mut config: ConfigFile, paths: &Vec<PathBuf>) -> Result<ConfigFile> {
+pub fn store_previous_paths(mut config: ConfigFile, paths: &[PathBuf]) -> Result<ConfigFile> {
     if !paths.is_empty() {
-        config.last_paths = Some(paths.clone());
+        config.last_paths = Some(paths.to_owned());
         save_config(config)
     } else {
         Ok(config)

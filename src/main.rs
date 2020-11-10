@@ -1,4 +1,4 @@
-#![deny(clippy::all, clippy::nursery, clippy::cargo, clippy::unwrap_used)]
+#![deny(clippy::all, clippy::nursery, clippy::unwrap_used)]
 mod argparse;
 mod config;
 mod execute;
