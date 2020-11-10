@@ -1,10 +1,10 @@
 use super::models::*;
 
 use super::super::util::expand_pathbuf;
+use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::{Error, ErrorKind, Result};
 use std::path::{Path, PathBuf};
 
 const CONFIG_ENV_NAME: &str = "MRT_CONFIG_PATH";
@@ -25,6 +25,16 @@ pub fn load_config(path: &Path) -> Result<ConfigFile> {
     }
 }
 
+pub fn store_previous_paths(mut config: ConfigFile, paths: &Vec<PathBuf>) -> Result<ConfigFile> {
+    if !paths.is_empty() {
+        config.last_paths = Some(paths.clone());
+        save_config(config)
+    } else {
+        Ok(config)
+    }
+}
+
+/** Expands paths in config from shorthand to absolute paths */
 fn expand_config_paths(mut config: ConfigFile) -> ConfigFile {
     let mut tags_after_expand: HashMap<String, Tag> = HashMap::new();
     for (tag_name, tag) in &config.tags {
@@ -44,10 +54,7 @@ pub fn save_config(config: ConfigFile) -> Result<ConfigFile> {
     let config_path = get_config_path();
     match config_path {
         Some(path) => save_config_at(path.as_path(), &config).map(|()| config),
-        None => Err(Error::new(
-            ErrorKind::NotFound,
-            "Could not detect correct config path",
-        )),
+        None => Err(anyhow!("Could not detect correct config path")),
     }
 }
 
@@ -103,6 +110,7 @@ mod test {
         let config_to_save = ConfigFile {
             version: crate::APP_VERSION.to_owned(),
             tags,
+            last_paths: None,
         };
 
         save_config_at(&test_config_path, &config_to_save)?;

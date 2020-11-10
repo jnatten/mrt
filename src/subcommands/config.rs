@@ -4,7 +4,7 @@ use crate::argparse::ParsedArgs;
 use crate::subcommands::subcommand::MrtSubcommand;
 use clap::{Arg, ArgMatches, SubCommand, Values};
 use std::env;
-use std::io::Result;
+use anyhow::Result;
 
 pub fn get() -> MrtSubcommand {
     MrtSubcommand {

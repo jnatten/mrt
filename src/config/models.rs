@@ -7,6 +7,7 @@ use std::path::PathBuf;
 pub struct ConfigFile {
     pub version: String,
     pub tags: HashMap<String, Tag>,
+    pub last_paths: Option<Vec<PathBuf>>,
 }
 
 impl ConfigFile {
@@ -14,6 +15,7 @@ impl ConfigFile {
         Self {
             version: String::from(APP_VERSION),
             tags: HashMap::new(),
+            last_paths: None,
         }
     }
 }

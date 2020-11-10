@@ -7,7 +7,7 @@ mod util;
 
 const APP_NAME: &str = "Multi Repo Tool";
 const APP_SHORT_NAME: &str = "mrt";
-const APP_VERSION: &str = "0.0.1";
+const APP_VERSION: &str = "0.0.2";
 
 use crate::subcommands::subcommand;
 use crate::subcommands::subcommand::MrtSubcommand;
@@ -157,8 +157,8 @@ fn main() {
     let config_path = get_config_path().unwrap_or_else(|| PathBuf::from(".mrtconfig.json"));
     let config_to_use = match config::loader::load_config(config_path.as_path()) {
         Ok(config) => config,
-        _ => {
-            eprintln!("{}", "ERROR: Could not load config...".red());
+        Err(e) => {
+            eprintln!("{}\n{}", "ERROR: Could not load config...".red(), e);
             exit(2);
         }
     };

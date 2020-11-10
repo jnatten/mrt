@@ -2,6 +2,7 @@ use super::argparse::ParsedArgs;
 use super::config::models::ConfigFile;
 use super::util;
 use crate::argparse::args::*;
+use crate::config;
 use crate::subcommands::status::{get_num_dirty_files, run_status_command};
 use anyhow::{anyhow, Result};
 use clap::ArgMatches;
@@ -134,8 +135,8 @@ pub fn exec(clap_args: &ArgMatches, parsed_args: ParsedArgs, config: ConfigFile)
             let should_print_instantly = (!clap_args.is_present(PARALLEL_TAG))
                 || clap_args.is_present(CONTINUOUS_OUTPUT_ARG);
 
-            let execute_in_shell = clap_args.is_present(SHELL_EXECUTION_ARG);
-            let panic_on_nonzero = clap_args.is_present(PANIC_ON_NON_ZERO_ARG);
+            // TODO: Spawn separate thread to store paths
+            config::loader::store_previous_paths(config, &all_paths)?;
 
             let execute_output = exec_all(
                 all_paths,
@@ -143,8 +144,8 @@ pub fn exec(clap_args: &ArgMatches, parsed_args: ParsedArgs, config: ConfigFile)
                 args,
                 clap_args.is_present(PARALLEL_TAG),
                 should_print_instantly,
-                execute_in_shell,
-                panic_on_nonzero,
+                clap_args.is_present(SHELL_EXECUTION_ARG),
+                clap_args.is_present(PANIC_ON_NON_ZERO_ARG),
             )?;
 
             execute_output
