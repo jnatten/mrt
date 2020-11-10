@@ -2,9 +2,9 @@ use super::super::config;
 use super::super::config::models::*;
 use crate::argparse::ParsedArgs;
 use crate::subcommands::subcommand::MrtSubcommand;
+use anyhow::Result;
 use clap::{Arg, ArgMatches, SubCommand, Values};
 use std::env;
-use anyhow::Result;
 
 pub fn get() -> MrtSubcommand {
     MrtSubcommand {

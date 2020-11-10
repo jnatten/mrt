@@ -31,6 +31,7 @@ pub mod args {
     pub const SHELL_EXECUTION_ARG: &str = "shell";
     pub const PANIC_ON_NON_ZERO_ARG: &str = "panic-on-nonzero";
     pub const ONLY_IN_MODIFIED: &str = "modified-only";
+    pub const USE_LAST_PATHS: &str = "previous-paths";
 }
 
 const TAG_ENV_VAR: &str = "MRT_DEFAULT_TAGS";

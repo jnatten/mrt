@@ -132,7 +132,13 @@ fn start_with_config(config: ConfigFile) -> Result<i32> {
                 .multiple(false)
                 .help("Only execute command in modified repos (Modification detected by git-status).")
         )
-
+        .arg(
+            Arg::with_name(USE_LAST_PATHS)
+                .short("L")
+                .long(USE_LAST_PATHS)
+                .multiple(false)
+                .help("Execute command in paths from previous execution of mrt.")
+        )
         .subcommands(subcmds.iter().map(|cmd| cmd.doc.to_owned()))
         .get_matches_from(&parsed_arguments.before_tags);
 

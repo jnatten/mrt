@@ -130,7 +130,14 @@ pub fn exec(clap_args: &ArgMatches, parsed_args: ParsedArgs, config: ConfigFile)
             let args = &parsed_args.after_tags[1..];
 
             let only_in_modified = clap_args.is_present(ONLY_IN_MODIFIED);
-            let all_paths = get_all_paths(&parsed_args.tags, &config, only_in_modified);
+            let all_paths = if clap_args.is_present(USE_LAST_PATHS) {
+                match &config.last_paths {
+                    Some(last_paths) => last_paths.clone(),
+                    None => get_all_paths(&parsed_args.tags, &config, only_in_modified),
+                }
+            } else {
+                get_all_paths(&parsed_args.tags, &config, only_in_modified)
+            };
 
             let should_print_instantly = (!clap_args.is_present(PARALLEL_TAG))
                 || clap_args.is_present(CONTINUOUS_OUTPUT_ARG);
