@@ -142,7 +142,6 @@ pub fn exec(clap_args: &ArgMatches, parsed_args: ParsedArgs, config: ConfigFile)
             let should_print_instantly = (!clap_args.is_present(PARALLEL_TAG))
                 || clap_args.is_present(CONTINUOUS_OUTPUT_ARG);
 
-            // TODO: Spawn separate thread to store paths
             config::loader::store_previous_paths(config, &all_paths)?;
 
             let execute_output = exec_all(
