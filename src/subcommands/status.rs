@@ -5,9 +5,9 @@ use super::super::util;
 use crate::subcommands::subcommand::MrtSubcommand;
 use clap::SubCommand;
 use colored::{ColoredString, Colorize};
-use std::cmp::max;
 use std::path::PathBuf;
 use std::process::Command;
+use std::{cmp::max, collections::VecDeque};
 
 pub fn get() -> MrtSubcommand {
     MrtSubcommand {
@@ -26,10 +26,35 @@ fn status(parsed_arguments: &ParsedArgs, config: ConfigFile) {
 }
 
 fn run_status(path: &PathBuf) -> String {
+    let default_branch = get_default_branch(path);
     match run_status_command(path).output() {
-        Ok(output) => format_output(path, &output.stdout),
+        Ok(output) => format_output(path, &output.stdout, default_branch),
         _ => format_error(path),
     }
+}
+
+fn get_default_branch(path: &PathBuf) -> String {
+    let mut cmd = Command::new("git");
+
+    cmd.args(&["-c", "color.ui=always"])
+        .args(&["symbolic-ref", "refs/remotes/origin/HEAD"])
+        .current_dir(path);
+
+    let maybe_default = match cmd.output() {
+        Ok(output) => {
+            let output_string = String::from_utf8_lossy(&output.stdout).to_string();
+            let mut lines: VecDeque<String> = output_string.split('\n').map(String::from).collect();
+            lines.pop_front().and_then(|l| {
+                l.split('/')
+                    .map(String::from)
+                    .collect::<Vec<String>>()
+                    .pop()
+            })
+        }
+        _ => None,
+    };
+
+    maybe_default.unwrap_or(String::from("master"))
 }
 
 pub fn run_status_command(path: &PathBuf) -> Command {
@@ -54,11 +79,11 @@ fn format_error(path: &PathBuf) -> String {
     )
 }
 
-fn format_output(path: &PathBuf, out: &[u8]) -> String {
+fn format_output(path: &PathBuf, out: &[u8], default_branch: String) -> String {
     let output_string = String::from_utf8_lossy(out).to_string();
     let lines: Vec<String> = output_string.split('\n').map(String::from).collect();
 
-    let branch = get_colored_branch(&lines);
+    let branch = get_colored_branch(&lines, default_branch);
     let dirtyness = get_dirtyness(&lines);
     let behindness: String = get_colored_behindness(&lines);
 
@@ -99,11 +124,10 @@ fn get_dirtyness(lines: &[String]) -> String {
     }
 }
 
-fn get_colored_branch(lines: &[String]) -> ColoredString {
+fn get_colored_branch(lines: &[String], default_branch: String) -> ColoredString {
     get_branch(lines)
         .map(|s| {
-            // TODO: Consider checking what is default branch rather than assume master
-            if s != "master" {
+            if s != default_branch {
                 s.bright_black()
             } else {
                 s.normal()
