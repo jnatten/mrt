@@ -98,9 +98,9 @@ fn get_headline(path: &PathBuf) -> String {
     let (prefix, basename) = util::split_on_basename(path);
     format!(
         "\n\n{} {}{}",
-        "in".bright_black().dimmed(),
-        prefix.bright_black().dimmed(),
-        basename.bright_black()
+        "in".bright_black(),
+        prefix.bright_black(),
+        basename.normal()
     )
 }
 
