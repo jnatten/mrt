@@ -9,6 +9,8 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{cmp::max, collections::VecDeque};
 
+const DEFAULT_BRANCH: &str = "master";
+
 pub fn get() -> MrtSubcommand {
     MrtSubcommand {
         name: String::from("status"),
@@ -33,11 +35,32 @@ fn run_status(path: &PathBuf) -> String {
     }
 }
 
+fn get_remote(path: &PathBuf) -> String {
+    let mut cmd = Command::new("git");
+
+    cmd.args(&["remote"]).current_dir(path);
+
+    let maybe_remote = match cmd.output() {
+        Ok(output) => {
+            let output_string = String::from_utf8_lossy(&output.stdout).to_string();
+            let mut lines: VecDeque<String> = output_string.split('\n').map(String::from).collect();
+            lines.pop_front()
+        }
+        _ => None,
+    };
+
+    maybe_remote.unwrap_or(String::from("origin"))
+}
+
 fn get_default_branch(path: &PathBuf) -> String {
     let mut cmd = Command::new("git");
 
+    let remote = get_remote(path);
     cmd.args(&["-c", "color.ui=always"])
-        .args(&["symbolic-ref", "refs/remotes/origin/HEAD"])
+        .args(&[
+            "symbolic-ref",
+            format!("refs/remotes/{}/HEAD", remote).as_str(),
+        ])
         .current_dir(path);
 
     let maybe_default = match cmd.output() {
@@ -54,7 +77,11 @@ fn get_default_branch(path: &PathBuf) -> String {
         _ => None,
     };
 
-    maybe_default.unwrap_or(String::from("master"))
+    match maybe_default {
+        Some(branch) if branch == "" => String::from(DEFAULT_BRANCH),
+        None => String::from(DEFAULT_BRANCH),
+        Some(default_branch) => default_branch,
+    }
 }
 
 pub fn run_status_command(path: &PathBuf) -> Command {
