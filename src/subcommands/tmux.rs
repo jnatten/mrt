@@ -3,20 +3,26 @@ use std::{path::PathBuf, process::Command};
 use super::subcommand::MrtSubcommand;
 use crate::{argparse::ParsedArgs, config::models::ConfigFile, execute, APP_SHORT_NAME};
 use anyhow::Result;
-use clap::SubCommand;
+use clap::{Arg, ArgMatches, SubCommand};
 use uuid::Uuid;
 
 pub fn get() -> MrtSubcommand {
     MrtSubcommand {
         name: String::from("tmux"),
-        run_subcommand: |_, parsed_args, config| tmux(parsed_args, config),
+        run_subcommand: |args, parsed_args, config| tmux(args, parsed_args, config),
         doc: SubCommand::with_name("tmux")
-            .about("Launch a tmux session, with panes opened in directories of the specified tags"),
+            .about("Launch a tmux session, with panes opened in directories of the specified tags")
+            .arg(
+                Arg::with_name("detached")
+                    .short("d")
+                    .long("detached")
+                    .help("Whether or not the tmux session should spawn in a detached state."),
+            ),
     }
 }
 
-fn tmux(parsed_arguments: &ParsedArgs, config: ConfigFile) -> () {
-    match open_tmux(parsed_arguments, config) {
+fn tmux(args: &ArgMatches, parsed_arguments: &ParsedArgs, config: ConfigFile) -> () {
+    match open_tmux(args, parsed_arguments, config) {
         Ok(_) => {}
         Err(e) => {
             eprintln!("We got an error when trying to open tmux:\n{}", e)
@@ -24,10 +30,20 @@ fn tmux(parsed_arguments: &ParsedArgs, config: ConfigFile) -> () {
     };
 }
 
-fn open_tmux(parsed_arguments: &ParsedArgs, config: ConfigFile) -> Result<()> {
+fn open_tmux(args: &ArgMatches, parsed_arguments: &ParsedArgs, config: ConfigFile) -> Result<()> {
     let session_name = spawn_new_session()?;
     let paths = execute::get_all_paths(&parsed_arguments.tags, &config, false);
     open_panes(session_name.as_str(), paths)?;
+    if !args.is_present("detached") {
+        attach_tmux(session_name.as_str())?;
+    }
+    Ok(())
+}
+
+fn attach_tmux(session_name: &str) -> Result<()> {
+    let mut cmd = Command::new("tmux");
+    cmd.args(&["attach", "-t", session_name]);
+    cmd.spawn()?.wait()?;
     Ok(())
 }
 
