@@ -1,0 +1,25 @@
+name: CI
+
+on: [push, pull_request]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+        override: true
+        components: rustfmt, clippy
+    - name: Formatting
+      run: cargo fmt --all -- --check
+    - name: Build
+      run: cargo build --verbose
+    - name: Clippy linting
+      run: cargo clippy --all-targets --all-features -- -D warnings
+    - name: Run tests
+      run: cargo test --verbose
