@@ -28,7 +28,7 @@ Right now there aren't any releases, but you can compile the code yourself with 
 
 ### Usage
 ```
-Multi Repo Tool 0.0.1
+Multi Repo Tool 0.0.3
 
 USAGE:
     mrt [FLAGS] [+tag ..] [--] [command]
@@ -43,7 +43,8 @@ FLAGS:
     -p, --parallel             Execute at each tagged path in parallel
                                This stores output until all executions are finished and then prints them in sequence,
                                unless --continuous-output specified.
-    -s, --shell                Will make command be executed in the context of a shell. 
+    -L, --previous-paths       Execute command in paths from previous execution of mrt.
+    -s, --shell                Will make command be executed in the context of a shell.
                                IE: `bash -c '<command>'`
                                `powershell /C '<command>' on windows.
     -V, --version              Prints version information
@@ -52,6 +53,7 @@ SUBCOMMANDS:
     config    Subcommand to add and remove tags, generally configure mrt itself
     help      Prints this message or the help of the given subcommand(s)
     status    Status of directories with specified tags
+    tmux      Launch a tmux session, with panes opened in directories of the specified tags
 
 EXAMPLES:
     # Tag current directory with tag `backend`
@@ -86,6 +88,9 @@ EXAMPLES:
 
     # Execute command in dirty repositories
     $ mrt -m git diff
+
+    # Launch a tmux session with a pane for each of the directories tagged with `backend`
+    $ mrt +backend tmux
 
 ```
 

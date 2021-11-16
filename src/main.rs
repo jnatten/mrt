@@ -55,6 +55,9 @@ fn help_text() -> String {
 
     {}
     {}
+
+    {}
+    {}
     ",
         "# Tag current directory with tag `backend`".bright_black(),
         "$ mrt config -a backend",
@@ -79,6 +82,9 @@ fn help_text() -> String {
         "$ mrt +/opt/somedir ls -l",
         "# Execute command in dirty repositories".bright_black(),
         "$ mrt -m git diff",
+        "# Launch a tmux session with a pane for each of the directories tagged with `backend`"
+            .bright_black(),
+        "$ mrt +backend tmux"
     )
 }
 
