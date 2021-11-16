@@ -9,7 +9,7 @@ use clap::ArgMatches;
 use colored::Colorize;
 use rayon::prelude::*;
 use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{exit, Command, Stdio};
 
 struct ExecutionOutput {
@@ -20,13 +20,12 @@ struct ExecutionOutput {
 
 pub fn get_all_paths(tags: &[String], config: &ConfigFile, only_in_modified: bool) -> Vec<PathBuf> {
     let mut all_paths: Vec<PathBuf> = if tags.is_empty() {
-        let nested_paths: Vec<Vec<PathBuf>> = config
+        let nested_paths = config
             .tags
             .iter()
-            .map(|(_tag_name, tag)| tag.paths.to_vec())
-            .collect();
+            .map(|(_tag_name, tag)| tag.paths.to_vec());
 
-        nested_paths.into_iter().flatten().collect()
+        nested_paths.flatten().collect()
     } else {
         tags.iter()
             .flat_map(|t| {
@@ -85,7 +84,7 @@ fn get_modified_paths(paths: Vec<PathBuf>) -> Result<Vec<PathBuf>> {
         .collect::<Result<Vec<PathBuf>>>()
 }
 
-fn is_modified(path: &PathBuf) -> Result<bool> {
+fn is_modified(path: &Path) -> Result<bool> {
     let output = run_status_command(path).output()?;
     let output_string = String::from_utf8_lossy(&output.stdout).to_string();
     let lines: Vec<String> = output_string.split('\n').map(String::from).collect();
@@ -94,7 +93,7 @@ fn is_modified(path: &PathBuf) -> Result<bool> {
     Ok(is_dirty)
 }
 
-fn get_headline(path: &PathBuf) -> String {
+fn get_headline(path: &Path) -> String {
     let (prefix, basename) = util::split_on_basename(path);
     format!(
         "\n\n{} {}{}",
@@ -104,7 +103,7 @@ fn get_headline(path: &PathBuf) -> String {
     )
 }
 
-fn print_result(path: &PathBuf, output: &ExecutionOutput) {
+fn print_result(path: &Path, output: &ExecutionOutput) {
     let headline = get_headline(path);
     if output.exit_code == 0 {
         println!("{}", headline.bright_black());
@@ -208,7 +207,7 @@ fn exec_all(
 }
 
 fn exec_at_path(
-    path: &PathBuf,
+    path: &Path,
     command: String,
     args: &[String],
     print: bool,
@@ -303,7 +302,7 @@ fn exec_with_captured_output(mut cmd: Command) -> ExecuteResult {
 /// Executes the command with the outputs attached.
 /// This is useful when we want the subprocess to be able to control their own outputs completely
 /// Example when using vim as a subcommand
-fn exec_with_connected_outputs(mut cmd: Command, path: &PathBuf) -> ExecuteResult {
+fn exec_with_connected_outputs(mut cmd: Command, path: &Path) -> ExecuteResult {
     let headline = get_headline(path);
     println!("{}\n", headline);
 

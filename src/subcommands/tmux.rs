@@ -1,4 +1,7 @@
-use std::{path::PathBuf, process::Command};
+use std::{
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use super::subcommand::MrtSubcommand;
 use crate::{argparse::ParsedArgs, config::models::ConfigFile, execute, APP_SHORT_NAME};
@@ -21,7 +24,7 @@ pub fn get() -> MrtSubcommand {
     }
 }
 
-fn tmux(args: &ArgMatches, parsed_arguments: &ParsedArgs, config: ConfigFile) -> () {
+fn tmux(args: &ArgMatches, parsed_arguments: &ParsedArgs, config: ConfigFile) {
     match open_tmux(args, parsed_arguments, config) {
         Ok(_) => {}
         Err(e) => {
@@ -64,7 +67,7 @@ fn open_panes(session_name: &str, paths: Vec<PathBuf>) -> Result<()> {
     Ok(())
 }
 
-fn open_pane_at(session_name: &str, path: &PathBuf, skip_split: bool) -> Result<()> {
+fn open_pane_at(session_name: &str, path: &Path, skip_split: bool) -> Result<()> {
     let mut cd_cmd = Command::new("tmux");
     let cd = format!("cd {}", path.to_string_lossy());
     cd_cmd.args(&["send-keys", "-t", session_name, cd.as_str(), "Enter"]);

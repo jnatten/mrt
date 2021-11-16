@@ -5,7 +5,7 @@ use super::super::util;
 use crate::subcommands::subcommand::MrtSubcommand;
 use clap::SubCommand;
 use colored::{ColoredString, Colorize};
-use std::path::PathBuf;
+use std::path::Path;
 use std::process::Command;
 use std::{cmp::max, collections::VecDeque};
 
@@ -27,7 +27,7 @@ fn status(parsed_arguments: &ParsedArgs, config: ConfigFile) {
     }
 }
 
-fn run_status(path: &PathBuf) -> String {
+fn run_status(path: &Path) -> String {
     let default_branch = get_default_branch(path);
     match run_status_command(path).output() {
         Ok(output) => format_output(path, &output.stdout, default_branch),
@@ -35,7 +35,7 @@ fn run_status(path: &PathBuf) -> String {
     }
 }
 
-fn get_remote(path: &PathBuf) -> String {
+fn get_remote(path: &Path) -> String {
     let mut cmd = Command::new("git");
 
     cmd.args(&["remote"]).current_dir(path);
@@ -49,10 +49,10 @@ fn get_remote(path: &PathBuf) -> String {
         _ => None,
     };
 
-    maybe_remote.unwrap_or(String::from("origin"))
+    maybe_remote.unwrap_or_else(|| String::from("origin"))
 }
 
-fn get_default_branch(path: &PathBuf) -> String {
+fn get_default_branch(path: &Path) -> String {
     let mut cmd = Command::new("git");
 
     let remote = get_remote(path);
@@ -78,13 +78,13 @@ fn get_default_branch(path: &PathBuf) -> String {
     };
 
     match maybe_default {
-        Some(branch) if branch == "" => String::from(DEFAULT_BRANCH),
+        Some(branch) if branch.is_empty() => String::from(DEFAULT_BRANCH),
         None => String::from(DEFAULT_BRANCH),
         Some(default_branch) => default_branch,
     }
 }
 
-pub fn run_status_command(path: &PathBuf) -> Command {
+pub fn run_status_command(path: &Path) -> Command {
     let mut cmd = Command::new("git");
 
     cmd.args(&["-c", "color.ui=always"])
@@ -94,7 +94,7 @@ pub fn run_status_command(path: &PathBuf) -> Command {
     cmd
 }
 
-fn format_error(path: &PathBuf) -> String {
+fn format_error(path: &Path) -> String {
     let formatted_path = util::format_path(path).red();
     let path_spaces = get_spaces_with_maxlen(50, formatted_path.len());
 
@@ -106,7 +106,7 @@ fn format_error(path: &PathBuf) -> String {
     )
 }
 
-fn format_output(path: &PathBuf, out: &[u8], default_branch: String) -> String {
+fn format_output(path: &Path, out: &[u8], default_branch: String) -> String {
     let output_string = String::from_utf8_lossy(out).to_string();
     let lines: Vec<String> = output_string.split('\n').map(String::from).collect();
 
@@ -132,12 +132,11 @@ fn get_spaces_with_maxlen(max_len: i32, string_length: usize) -> String {
 }
 
 pub fn get_num_dirty_files(lines: &[String]) -> usize {
-    let modified_files: Vec<&String> = lines
+    let modified_files = lines
         .iter()
-        .filter(|l| !(l.starts_with("## ") || l.is_empty()))
-        .collect();
+        .filter(|l| !(l.starts_with("## ") || l.is_empty()));
 
-    modified_files.len()
+    modified_files.count()
 }
 
 fn get_dirtyness(lines: &[String]) -> String {

@@ -72,10 +72,8 @@ fn find_tags_in_args(args: &[String], subcommand_names: &[&String]) -> ParsedArg
 
     if cli_tags.tags.is_empty() {
         cli_tags.tags = get_tags_from_env();
-        cli_tags
-    } else {
-        cli_tags
     }
+    cli_tags
 }
 
 fn get_tags_from_env() -> Vec<String> {

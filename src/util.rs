@@ -1,5 +1,5 @@
 use colored::Colorize;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub fn expand_path(input: &str) -> PathBuf {
     let expanded = String::from(shellexpand::tilde(input));
@@ -12,11 +12,7 @@ pub fn expand_pathbuf(input: PathBuf) -> PathBuf {
     PathBuf::from(expanded)
 }
 
-fn format_path_with_homedir(
-    path: &PathBuf,
-    home_dir: Option<PathBuf>,
-    sep: char,
-) -> (String, String) {
+fn format_path_with_homedir(path: &Path, home_dir: Option<PathBuf>, sep: char) -> (String, String) {
     let base_name = path.file_name().map(|x| x.to_str().unwrap_or(""));
     let dir_name = path.parent().map(|x| x.to_str().unwrap_or(""));
 
@@ -36,12 +32,12 @@ fn format_path_with_homedir(
     (prefix, base_name.unwrap_or("").to_string())
 }
 
-pub fn format_path(path: &PathBuf) -> String {
+pub fn format_path(path: &Path) -> String {
     let (prefix, basename) = split_on_basename(path);
     format!("{}{}", prefix.dimmed(), basename.normal())
 }
 
-pub fn split_on_basename(path: &PathBuf) -> (String, String) {
+pub fn split_on_basename(path: &Path) -> (String, String) {
     let home_dir = dirs::home_dir();
     format_path_with_homedir(path, home_dir, std::path::MAIN_SEPARATOR)
 }
