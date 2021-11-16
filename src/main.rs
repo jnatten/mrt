@@ -7,7 +7,7 @@ mod util;
 
 const APP_NAME: &str = "Multi Repo Tool";
 const APP_SHORT_NAME: &str = "mrt";
-const APP_VERSION: &str = "0.0.2";
+const APP_VERSION: &str = "0.0.3";
 
 use crate::subcommands::subcommand;
 use crate::subcommands::subcommand::MrtSubcommand;

@@ -1,7 +1,7 @@
 [package]
 name = "mrt"
 description = "A tool to interact with multiple repositories, by executing the specified commands in multiple contexts."
-version = "0.0.1"
+version = "0.0.3"
 authors = ["Jonas Natten <jonas@natten.it>"]
 edition = "2018"
 license-file = "LICENSE"
@@ -23,6 +23,8 @@ dirs = "3.0.1" # Used to determine dir for config platform agnostic
 shellexpand = "2.0.0" # Used to expand tilde as home etc...
 
 anyhow = "1.0.34" # Simpler error handling
+
+uuid = {version = "0.8.2", features = ["v4"] } # UUID for unique tmux session names
 
 [dev-dependencies]
 tempdir = "0.3.7" # Used for testing config functionality
