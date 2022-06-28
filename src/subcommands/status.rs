@@ -188,17 +188,14 @@ fn get_branch(lines: &[String]) -> Option<String> {
 }
 
 fn get_behindness(lines: &[String]) -> Option<String> {
-    lines
-        .first()
-        .map(|branch_line| {
-            if branch_line.ends_with(']') {
-                let mut split: Vec<String> = branch_line.split(" [").map(String::from).collect();
-                split.pop().map(|l| format!("[{}", l))
-            } else {
-                None
-            }
-        })
-        .flatten()
+    lines.first().and_then(|branch_line| {
+        if branch_line.ends_with(']') {
+            let mut split: Vec<String> = branch_line.split(" [").map(String::from).collect();
+            split.pop().map(|l| format!("[{}", l))
+        } else {
+            None
+        }
+    })
 }
 
 fn get_colored_behindness(lines: &[String]) -> String {

@@ -12,7 +12,7 @@ use uuid::Uuid;
 pub fn get() -> MrtSubcommand {
     MrtSubcommand {
         name: String::from("tmux"),
-        run_subcommand: |args, parsed_args, config| tmux(args, parsed_args, config),
+        run_subcommand: tmux,
         doc: SubCommand::with_name("tmux")
             .about("Launch a tmux session, with panes opened in directories of the specified tags")
             .arg(
